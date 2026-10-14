@@ -1,0 +1,66 @@
+## Visual Studio & .NET Build Artifacts
+[Dd]ebug/
+[Dd][Ee]bugPS/
+[Rr]elease/
+[Rr]eleasePS/
+x64/
+x86/
+[Aa]rm/
+[Aa]rm64/
+bld/
+[Bb]in/
+[Oo]bj/
+[Ex]ternal/
+
+## .NET Core / ASP.NET Core Specific
+*.user
+*.userosscache
+*.sln.docstates
+.vs/
+.idea/
+.vscode/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+## Front-End / Node.js (Crucial for modern web apps)
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+.eslintcache
+.stylelintcache
+
+## Front-End Build & Bundler Outputs
+dist/
+build/
+.svelte-kit/
+.next/
+.nuxt/
+out/
+.cache/
+
+## Secrets, Environment, and Local Configurations
+*.user
+appsettings.Development.json
+appsettings.Local.json
+.env
+.env.local
+.env.*.local
+
+## User Secrets (.NET local secrets storage)
+Visual Studio Secrets/
+secrets.json
+
+## Rider / JetBrains IDEs
+.idea/
+*.sln.iml
+
+## OS generated files
+.DS_Store
+Thumbs.db
+
+.claude/
+CLAUDE.md
