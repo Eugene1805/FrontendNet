@@ -25,7 +25,10 @@ public class SecurityHeadersMiddleware(RequestDelegate next, IConfiguration conf
             "script-src 'self' https://cdnjs.cloudflare.com",
             "font-src 'self' https://cdn.jsdelivr.net",
             // dotnet watch usa websockets para recargar el navegador.
-            env.IsDevelopment() ? "connect-src 'self' ws: wss:" : "connect-src 'self'",
+            // Los CDN se permiten en connect-src para que las herramientas de desarrollo puedan leer los .map.
+            env.IsDevelopment()
+                ? "connect-src 'self' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net ws: wss:"
+                : "connect-src 'self' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net",
             "object-src 'none'",
             "base-uri 'self'",
             "form-action 'self'",
