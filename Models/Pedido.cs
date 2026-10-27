@@ -28,7 +28,13 @@ public class PedidoNuevo
     [StringLength(300, MinimumLength = 10, ErrorMessage = "El campo {0} debe tener entre {2} y {1} caracteres.")]
     [DataType(DataType.MultilineText)]
     [Display(Name = "Dirección de envío")]
-    public string DireccionEnvio { get; set; } = "";
+    public string DireccionEnvio
+    {
+        get => _direccion;
+        // Se recortan los espacios antes de validar: "Av Xalapa " no debe cumplir el mínimo por el espacio final.
+        set => _direccion = value?.Trim() ?? "";
+    }
+    private string _direccion = "";
     [Display(Name = "Método de pago")]
     public string MetodoPago { get; set; } = "simulado";
 }
