@@ -1,0 +1,20 @@
+@{
+    int codigo = ViewBag.Codigo ?? 500;
+    ViewData["Title"] = codigo switch
+    {
+        404 => "Página no encontrada",
+        403 => "Acceso denegado",
+        401 => "Sesión requerida",
+        _ => "Ocurrió un problema"
+    };
+}
+
+<div class="container">
+    <h1 class="text-danger">@codigo <small class="fs-4">@ViewData["Title"]</small></h1>
+    <p class="text-muted">
+        @(codigo == 404
+            ? "El elemento que busca no existe o ya no está disponible."
+            : "No fue posible atender la solicitud.")
+    </p>
+    <p><a class="btn btn-sm btn-outline-secondary" asp-controller="Home" asp-action="Index">Ir al inicio</a></p>
+</div>
