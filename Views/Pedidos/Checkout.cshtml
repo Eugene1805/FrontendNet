@@ -1,0 +1,56 @@
+@model PedidoNuevo
+@{
+    ViewData["Title"] = "Confirmar compra";
+    Carrito carrito = ViewBag.Carrito;
+}
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
+
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb small">
+        <li class="breadcrumb-item"><a class="text-decoration-none" asp-controller="Carrito" asp-action="Index">Carrito</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Confirmar</li>
+    </ol>
+</nav>
+
+<h2 class="text-center mb-3">@ViewData["Title"]</h2>
+
+<div class="card mt-3">
+    <div class="card-body small">
+        <h5 class="card-title">Resumen</h5>
+        <table class="table table-sm align-middle">
+            <tbody>
+                @foreach (var item in carrito.Items)
+                {
+                    <tr>
+                        <td>@item.Titulo × @item.Cantidad</td>
+                        <td class="text-end">@item.Subtotal.ToString("C")</td>
+                    </tr>
+                }
+            </tbody>
+            <tfoot>
+                <tr><th>Total</th><th class="text-end">@carrito.Total.ToString("C")</th></tr>
+            </tfoot>
+        </table>
+        <p class="text-muted mb-0">Los precios se calculan en el servidor al confirmar. Método de pago: simulado.</p>
+    </div>
+</div>
+
+<form asp-action="Checkout">
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+    <div class="card mt-3">
+        <div class="card-body small">
+            <div class="form-floating mb-3">
+                <textarea asp-for="DireccionEnvio" placeholder="Dirección" class="form-control" style="height: 100px"></textarea>
+                <label asp-for="DireccionEnvio" class="form-label"></label>
+                <span asp-validation-for="DireccionEnvio" class="text-danger"></span>
+            </div>
+        </div>
+    </div>
+    <div class="text-center mt-3">
+        <button id="btnEnviar" type="submit" class="btn btn-sm btn-primary">Confirmar pedido</button>
+        <a class="btn btn-sm btn-outline-secondary" asp-controller="Carrito" asp-action="Index">Cancelar</a>
+    </div>
+</form>

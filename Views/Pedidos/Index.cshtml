@@ -1,0 +1,67 @@
+@model List<PedidoResumen>
+@{
+    bool esAdmin = User.IsInRole("Administrador");
+    ViewData["Title"] = esAdmin ? "Pedidos" : "Mis pedidos";
+    ViewData["SubTitle"] = "Listado";
+}
+<h2 class="text-center mb-3">@ViewData["Title"] <small class="text-muted fs-5">@ViewData["SubTitle"]</small></h2>
+
+<form asp-action="Index" method="get" class="row small g-2 mb-3">
+    <div class="col-12 col-sm-6 col-md-4 col-lg-3">
+        <div class="input-group input-group-sm">
+            <select name="estado" class="form-select" asp-items="ViewBag.Estados" aria-label="Estado">
+                <option value="">Todos los estados</option>
+            </select>
+            <button class="btn btn-primary" type="submit" title="Filtrar"><i class="bi bi-funnel"></i></button>
+        </div>
+    </div>
+    <div class="col text-end align-self-center">Mostrando @Model.Count de @ViewBag.Total elementos</div>
+</form>
+
+@if (Model.Count > 0)
+{
+    <div class="table-responsive">
+        <table class="table table-striped table-bordered small align-middle">
+            <thead class="text-center">
+                <tr>
+                    <th>Pedido</th>
+                    <th>Fecha</th>
+                    @if (esAdmin)
+                    {
+                        <th>Usuario</th>
+                    }
+                    <th>Estado</th>
+                    <th>Total</th>
+                    <th width="1"></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model)
+                {
+                    <tr>
+                        <td class="text-center">#@item.PedidoId</td>
+                        <td>@item.Fecha.ToLocalTime().ToString("g")</td>
+                        @if (esAdmin)
+                        {
+                            <td>@item.Usuario</td>
+                        }
+                        <td class="text-center"><span class="badge text-bg-secondary">@item.Estado</span></td>
+                        <td class="text-end">@item.Total.ToString("C")</td>
+                        <td>
+                            <a class="text-decoration-none small text-uppercase" asp-action="Detalle" asp-route-id="@item.PedidoId">Detalle</a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+    <partial name="_PaginacionPartial" />
+}
+else
+{
+    <div class="mt-5">
+        <div class="alert alert-warning" role="alert">
+            No se han encontrado pedidos.
+        </div>
+    </div>
+}

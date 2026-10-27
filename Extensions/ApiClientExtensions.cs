@@ -16,4 +16,15 @@ public static class ApiClientExtensions
             .AddHttpMessageHandler<EnviaBearerDelegatingHandler>()
             .AddHttpMessageHandler<RefrescaTokenDelegatingHandler>();
     }
+
+    /// <summary>Igual que <see cref="AddApiClient{TClient}"/> pero registrado bajo una interfaz.</summary>
+    public static IHttpClientBuilder AddApiClient<TService, TImplementation>(this IServiceCollection services, string urlWebApi)
+        where TService : class
+        where TImplementation : class, TService
+    {
+        return services
+            .AddHttpClient<TService, TImplementation>(client => client.BaseAddress = new Uri(urlWebApi))
+            .AddHttpMessageHandler<EnviaBearerDelegatingHandler>()
+            .AddHttpMessageHandler<RefrescaTokenDelegatingHandler>();
+    }
 }
