@@ -1,10 +1,6 @@
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.20.0/jquery.validate.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validation-unobtrusive/4.0.0/jquery.validate.unobtrusive.min.js"></script>
-<script>
-    var settings = {
-        validClass: "is-valid",
-        errorClass: "is-invalid"
-    };
-    $.validator.setDefaults(settings);
-    $.validator.unobtrusive.options = settings;
-</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.20.0/jquery.validate.min.js"
+        integrity="sha384-8YsK79UihWh55dY1Oycx4/Ku9PS3Bef1LHNZ0EOAtmf/DGPZ6dLrRBuVpbzSgoqH" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validation-unobtrusive/4.0.0/jquery.validate.unobtrusive.min.js"
+        integrity="sha384-DU2a51mTHKDhpXhTyJQ++hP8L9L8Gc48TlvbzBmUof71V7kNVs4ELmaVJKPxcAGn" crossorigin="anonymous"></script>
+@* Script propio (sin código en línea para poder usar una CSP estricta). *@
+<script src="~/js/validacion.js" asp-append-version="true"></script>
