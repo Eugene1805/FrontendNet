@@ -1,4 +1,4 @@
-@model AuthUser
+@model PerfilSesion
 @{
     ViewData["Title"] = "Perfil de usuario";
     ViewData["SubTitle"] = "Perfil";
@@ -15,24 +15,43 @@
 <div class="card mt-3">
     <div class="card-body">
         <div class="mb-3 ps-3">
-            <label asp-for="Email" class="form-label form-text"></label>
+            <label class="form-label form-text">Correo electrónico</label>
             <div class="form-text text-body">@Model.Email</div>
         </div>
         <div class="mb-3 ps-3">
-            <label asp-for="Nombre" class="form-label form-text"></label>
+            <label class="form-label form-text">Nombre</label>
             <div class="form-text text-body">@Model.Nombre</div>
         </div>
         <div class="mb-3 ps-3">
-            <label asp-for="Rol" class="form-label form-text"></label>
+            <label class="form-label form-text">Rol</label>
             <div class="form-text text-body">@Model.Rol</div>
         </div>
-        <div class="mb-3 ps-3 small">
-            <label asp-for="Jwt" class="form-label form-text"></label>
-            <div class="form-text text-body">@Model.Jwt</div>
-        </div>
         <div class="mb-3 ps-3">
-            <label class="form-label form-text">Tiempo restante</label>
-            <div class="form-text text-body">@ViewBag.timeRemaining</div>
+            <label class="form-label form-text">Tiempo restante de la sesión</label>
+            <div class="form-text text-body">@(Model.TiempoRestante ?? "No disponible")</div>
         </div>
+        @if (Model.ExpiraUtc is { } expira)
+        {
+            <div class="mb-3 ps-3">
+                <label class="form-label form-text">La sesión expira</label>
+                <div class="form-text text-body">@expira.ToLocalTime().ToString("G")</div>
+            </div>
+        }
+        @if (Model.Emisor != null || Model.Audiencia != null)
+        {
+            <div class="mb-3 ps-3">
+                <label class="form-label form-text">Token emitido por / para</label>
+                <div class="form-text text-body">@Model.Emisor / @Model.Audiencia</div>
+            </div>
+        }
+        <p class="ps-3 form-text mb-0">Por seguridad, el token de sesión (JWT) no se muestra en pantalla.</p>
     </div>
 </div>
+
+@if (ViewBag.Editable == true)
+{
+    <div class="text-center mt-3">
+        <a class="btn btn-sm btn-outline-primary" asp-action="Editar">Editar nombre</a>
+        <a class="btn btn-sm btn-outline-primary" asp-action="CambiarPassword">Cambiar contraseña</a>
+    </div>
+}
