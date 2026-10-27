@@ -118,6 +118,9 @@ public class PedidosMemoriaTests
         await Como("admin@uv.mx", "Administrador").CambiaEstadoAsync(p2.PedidoId, EstadoPedido.Pagado);
         var ex = await Assert.ThrowsAsync<ApiException>(() => Como("ana@uv.mx", "Usuario").CancelarAsync(p2.PedidoId));
         Assert.Equal(HttpStatusCode.Conflict, ex.StatusCode);
+        // El motivo se explica con el estado actual y la regla, en lenguaje para el usuario.
+        Assert.Contains("Pagado", ex.Message);
+        Assert.Contains("pedidos pendientes", ex.Message);
     }
 
     [Fact]

@@ -69,6 +69,34 @@ public class HelpersTests
     private static IConfiguration Config(params (string, string)[] valores) =>
         new ConfigurationBuilder().AddInMemoryCollection(valores.ToDictionary(v => v.Item1, v => (string?)v.Item2)).Build();
 
+    [Theory]
+    [InlineData("""{"id":"u","email":"e@x.mx","nombre":"N","rol":"R","protegido":1}""", true)]
+    [InlineData("""{"id":"u","email":"e@x.mx","nombre":"N","rol":"R","protegido":0}""", false)]
+    [InlineData("""{"id":"u","email":"e@x.mx","nombre":"N","rol":"R","protegido":true}""", true)]
+    [InlineData("""{"id":"u","email":"e@x.mx","nombre":"N","rol":"R","protegido":false}""", false)]
+    public void El_backend_envia_booleanos_como_0_o_1_y_se_leen_bien(string json, bool esperado)
+    {
+        var usuario = System.Text.Json.JsonSerializer.Deserialize<Usuario>(json, new System.Text.Json.JsonSerializerOptions(System.Text.Json.JsonSerializerDefaults.Web));
+        Assert.Equal(esperado, usuario!.Protegido);
+    }
+
+    [Fact]
+    public void La_direccion_se_recorta_antes_de_validar_el_minimo()
+    {
+        var modelo = new PedidoNuevo { DireccionEnvio = "  Av Xalapa  " };
+        Assert.Equal("Av Xalapa", modelo.DireccionEnvio);
+        var resultados = new List<System.ComponentModel.DataAnnotations.ValidationResult>();
+        Assert.False(System.ComponentModel.DataAnnotations.Validator.TryValidateObject(
+            modelo, new System.ComponentModel.DataAnnotations.ValidationContext(modelo), resultados, true));
+    }
+
+    [Fact]
+    public void Csp_permite_a_los_CDN_servir_los_mapas_de_las_librerias()
+    {
+        var csp = SecurityHeadersMiddleware.ConstruyeCsp(Config(), new Entorno("Production"));
+        Assert.Contains("connect-src 'self' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net", csp);
+    }
+
     [Fact]
     public void Csp_no_permite_scripts_en_linea_ni_framing()
     {

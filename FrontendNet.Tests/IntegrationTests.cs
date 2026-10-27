@@ -66,7 +66,7 @@ public class ApiIntegracion
         if (p.Metodo == HttpMethod.Delete && ruta == "/api/usuarios/ana%40uv.mx") return ApiFalso.Json(HttpStatusCode.Forbidden, new { mensaje = "Acceso prohibido: No se pueden eliminar usuarios protegidos del sistema." });
         if (ruta == "/api/usuarios/ana%40uv.mx") return ApiFalso.JsonCrudo(HttpStatusCode.OK, """{"id":"u2","email":"ana@uv.mx","nombre":"Ana","protegido":false,"rol":"Usuario"}""");
         if (ruta == "/api/usuarios")
-            return ApiFalso.JsonCrudo(HttpStatusCode.OK, """[{"id":"u1","email":"admin@uv.mx","nombre":"Admin","protegido":true,"rol":"Administrador"},{"id":"u2","email":"ana@uv.mx","nombre":"Ana","protegido":false,"rol":"Usuario"}]""");
+            return ApiFalso.JsonCrudo(HttpStatusCode.OK, """[{"id":"u1","email":"admin@uv.mx","nombre":"Admin","protegido":1,"rol":"Administrador"},{"id":"u2","email":"ana@uv.mx","nombre":"Ana","protegido":0,"rol":"Usuario"}]""");
         return ApiFalso.Json(HttpStatusCode.NotFound, new { mensaje = "Ruta no encontrada." });
     }
 }
@@ -271,7 +271,12 @@ public class IntegrationTests(AppFactory fabrica) : IClassFixture<AppFactory>
         var checkout = await Pagina(usuario, "/Pedidos/Checkout");
         var corto = await Post(usuario, "/Pedidos/Checkout", checkout, new() { ["DireccionEnvio"] = "corta" });
         Assert.Equal(HttpStatusCode.OK, corto.StatusCode);
-        Assert.Contains("entre 10 y 300", await corto.Content.ReadAsStringAsync());
+        Assert.Contains("entre 10 y 300", await Texto(corto));
+
+        // Nueve caracteres más un espacio final no cumplen el mínimo (se valida el texto recortado).
+        var conEspacio = await Post(usuario, "/Pedidos/Checkout", checkout, new() { ["DireccionEnvio"] = "Av Xalapa " });
+        Assert.Equal(HttpStatusCode.OK, conEspacio.StatusCode);
+        Assert.Contains("entre 10 y 300", await Texto(conEspacio));
 
         // Checkout correcto → redirige al detalle del pedido, en estado Pendiente.
         var crea = await Post(usuario, "/Pedidos/Checkout", checkout, new() { ["DireccionEnvio"] = "Calle 1 #23, Xalapa, Veracruz", ["MetodoPago"] = "tarjeta-real" });
@@ -297,6 +302,7 @@ public class IntegrationTests(AppFactory fabrica) : IClassFixture<AppFactory>
         // El usuario ya no puede cancelar (pedido Pagado) y un administrador no compra.
         var recargado = await Pagina(usuario, $"/Pedidos/Detalle/{id}");
         Assert.DoesNotContain("Cancelar pedido", recargado);
+        Assert.Contains("Solo se pueden cancelar los pedidos pendientes", recargado);
         var adminCompra = await admin.GetAsync("/Pedidos/Checkout");
         Assert.Equal(HttpStatusCode.Redirect, adminCompra.StatusCode);
         Assert.Contains("AccessDenied", adminCompra.Headers.Location!.OriginalString);
