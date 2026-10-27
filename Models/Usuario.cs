@@ -1,4 +1,6 @@
 using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
+using FrontendNet.Helpers;
 namespace FrontendNet.Models;
 
 public class Usuario
@@ -16,6 +18,7 @@ public class Usuario
     [Display(Name = "Rol")]
     public required string Rol { get; set; }
     [Display(Name = "Protegido")]
+    [JsonConverter(typeof(BoolNumericoConverter))]
     public bool Protegido { get; set; }
     [MinLength(6, ErrorMessage = "El campo {0} debe tener un mínimo de {1} caracteres.")]
     [DataType(DataType.Password)]

@@ -1,4 +1,6 @@
 using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
+using FrontendNet.Helpers;
 namespace FrontendNet.Models;
 
 public class Archivo
@@ -11,5 +13,6 @@ public class Archivo
     [Display(Name = "Tamaño")]
     public int? Size { get; set; }
     [Display(Name = "Repositorio")]
+    [JsonConverter(typeof(BoolNumericoConverter))]
     public bool InDb { get; set; } = true;
 }
