@@ -13,18 +13,15 @@ public class CategoriaClientService(HttpClient client)
     }
     public async Task PostAsync(Categoria categoria)
     {
-        var response = await client.PostAsJsonAsync($"api/categorias", categoria);
-        response.EnsureSuccessStatusCode();
+        using var response = await client.PostAsJsonAsync("api/categorias", categoria);
     }
 
     public async Task PutAsync(Categoria categoria)
     {
-        var response = await client.PutAsJsonAsync($"api/categorias/{categoria.CategoriaId}", categoria);
-        response.EnsureSuccessStatusCode();
+        using var response = await client.PutAsJsonAsync($"api/categorias/{categoria.CategoriaId}", categoria);
     }
     public async Task DeleteAsync(int id)
     {
-        var response = await client.DeleteAsync($"api/categorias/{id}");
-        response.EnsureSuccessStatusCode();
+        using var response = await client.DeleteAsync($"api/categorias/{id}");
     }
 }

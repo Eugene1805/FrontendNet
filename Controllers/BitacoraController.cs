@@ -6,22 +6,19 @@ using Microsoft.AspNetCore.Mvc;
 namespace FrontendNet;
 
 [Authorize(Roles = "Administrador")]
-public class BitacoraController(BitacoraClientService bitacora) : Controller
+public class BitacoraController(BitacoraClientService bitacora) : AppController
 {
-    public async Task<IActionResult> IndexAsync()
+    public async Task<IActionResult> IndexAsync(int pagina = 1)
     {
-        List<Bitacora>? lista = null;
         try
         {
-            lista = await bitacora.GetAsync();
+            var lista = await bitacora.GetAsync() ?? [];
+            // Más reciente primero; el API devuelve todo sin límite (X-12).
+            return View(Pagina(lista.OrderByDescending(b => b.Fecha), pagina));
         }
-        catch (HttpRequestException ex)
+        catch (Exception ex) when (EsErrorApi(ex))
         {
-            if (ex.StatusCode == System.Net.HttpStatusCode.Unauthorized)
-            {
-                return RedirectToAction("Salir", "Auth");
-            }
+            return ErrorGet(ex);
         }
-        return View(lista);
     }
 }

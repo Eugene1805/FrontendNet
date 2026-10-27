@@ -6,41 +6,32 @@ using Microsoft.AspNetCore.Mvc;
 namespace FrontendNet;
 
 [Authorize(Roles = "Administrador")]
-public class CategoriasController(CategoriaClientService categorias) : Controller
+public class CategoriasController(CategoriaClientService categorias) : AppController
 {
     public async Task<IActionResult> Index()
     {
-        List<Categoria>? lista = [];
         try
         {
-            lista = await categorias.GetAsync();
+            return View(await categorias.GetAsync() ?? []);
         }
-        catch (HttpRequestException ex)
+        catch (Exception ex) when (EsErrorApi(ex))
         {
-            if (ex.StatusCode == System.Net.HttpStatusCode.Unauthorized)
-            {
-                return RedirectToAction("Salir", "Auth");
-            }
+            return ErrorGet(ex);
         }
-        return View(lista);
     }
 
     public async Task<IActionResult> Detalle(int id)
     {
-        Categoria? item = null;
         try
         {
-            item = await categorias.GetAsync(id);
+            var item = await categorias.GetAsync(id);
             if (item == null) return NotFound();
+            return View(item);
         }
-        catch (HttpRequestException ex)
+        catch (Exception ex) when (EsErrorApi(ex))
         {
-            if (ex.StatusCode == System.Net.HttpStatusCode.Unauthorized)
-            {
-                return RedirectToAction("Salir", "Auth");
-            }
+            return ErrorGet(ex);
         }
-        return View(item);
     }
 
     public IActionResult Crear()
@@ -53,40 +44,32 @@ public class CategoriasController(CategoriaClientService categorias) : Controlle
     {
         if (ModelState.IsValid)
         {
-
             try
             {
                 await categorias.PostAsync(itemToCreate);
                 return RedirectToAction(nameof(Index));
             }
-            catch (HttpRequestException ex)
+            catch (Exception ex) when (EsErrorApi(ex))
             {
-                if (ex.StatusCode == System.Net.HttpStatusCode.Unauthorized)
-                {
-                    return RedirectToAction("Salir", "Auth");
-                }
+                var salida = ManejaErrorApi(ex);
+                if (salida != null) return salida;
             }
         }
-        ModelState.AddModelError(string.Empty, "Ocurrió un error al procesar la solicitud. Inténtelo nuevamente.");
         return View(itemToCreate);
     }
 
     public async Task<IActionResult> EditarAsync(int id)
     {
-        Categoria? item = null;
         try
         {
-            item = await categorias.GetAsync(id);
+            var item = await categorias.GetAsync(id);
             if (item == null) return NotFound();
+            return View(item);
         }
-        catch (HttpRequestException ex)
+        catch (Exception ex) when (EsErrorApi(ex))
         {
-            if (ex.StatusCode == System.Net.HttpStatusCode.Unauthorized)
-            {
-                return RedirectToAction("Salir", "Auth");
-            }
+            return ErrorGet(ex);
         }
-        return View(item);
     }
 
     [HttpPost]
@@ -104,62 +87,44 @@ public class CategoriasController(CategoriaClientService categorias) : Controlle
                 await categorias.PutAsync(itemToUpdate);
                 return RedirectToAction(nameof(Index));
             }
-            catch (HttpRequestException ex)
+            catch (Exception ex) when (EsErrorApi(ex))
             {
-                if (ex.StatusCode == System.Net.HttpStatusCode.Unauthorized)
-                {
-                    return RedirectToAction("Salir", "Auth");
-                }
+                var salida = ManejaErrorApi(ex);
+                if (salida != null) return salida;
             }
         }
-        ModelState.AddModelError(string.Empty, "Ocurrió un error al procesar la solicitud. Inténtelo nuevamente.");
         return View(itemToUpdate);
     }
 
-    public async Task<IActionResult> EliminarAsync(int id, bool? showError = false)
+    public async Task<IActionResult> EliminarAsync(int id, string? error = null)
     {
-        Categoria? item = null;
         try
         {
-            item = await categorias.GetAsync(id);
+            var item = await categorias.GetAsync(id);
             if (item == null) return NotFound();
-            if (showError.GetValueOrDefault())
-            {
-                ViewBag.ErrorMessage = "No se puede eliminar la categoría porque tiene productos asociados.";
-            }
+            ViewBag.ErrorMessage = error;
+            return View(item);
         }
-        catch (HttpRequestException ex)
+        catch (Exception ex) when (EsErrorApi(ex))
         {
-            if (ex.StatusCode == System.Net.HttpStatusCode.Unauthorized)
-            {
-                return RedirectToAction("Salir", "Auth");
-            }
+            return ErrorGet(ex);
         }
-        return View(item);
     }
 
     [HttpPost]
     public async Task<IActionResult> Eliminar(int id)
     {
-        if (ModelState.IsValid)
+        try
         {
-            try
-            {
-                await categorias.DeleteAsync(id);
-                return RedirectToAction(nameof(Index));
-            }
-            catch (HttpRequestException ex)
-            {
-                if (ex.StatusCode == System.Net.HttpStatusCode.Unauthorized)
-                {
-                    return RedirectToAction("Salir", "Auth");
-                }
-                else if (ex.StatusCode == System.Net.HttpStatusCode.Conflict)
-                {
-                    return RedirectToAction(nameof(Eliminar), new { id, showError = true });
-                }
-            }
+            await categorias.DeleteAsync(id);
+            return RedirectToAction(nameof(Index));
         }
-        return RedirectToAction(nameof(Eliminar), new { id, showError = true });
+        catch (Exception ex) when (EsErrorApi(ex))
+        {
+            // D-06: el API no responde 409; la FK es ON DELETE CASCADE y las protegidas responden 400 con su mensaje.
+            return ManejaErrorApi(ex) is { } salida
+                ? salida
+                : RedirectToAction(nameof(Eliminar), new { id, error = MensajePara(ex) });
+        }
     }
 }

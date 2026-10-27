@@ -15,4 +15,10 @@ public class Usuario
     [Required(ErrorMessage = "El campo {0} es obligatorio.")]
     [Display(Name = "Rol")]
     public required string Rol { get; set; }
+    [Display(Name = "Protegido")]
+    public bool Protegido { get; set; }
+    [MinLength(6, ErrorMessage = "El campo {0} debe tener un mínimo de {1} caracteres.")]
+    [DataType(DataType.Password)]
+    [Display(Name = "Nueva contraseña (opcional)")]
+    public string? Password { get; set; }
 }

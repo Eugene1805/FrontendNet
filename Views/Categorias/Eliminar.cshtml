@@ -17,6 +17,7 @@
 @if (!Model.Protegida)
 {
     <p class="text-danger">¿Está seguro que desea eliminar este elemento?</p>
+    <p class="text-warning-emphasis small">Si la categoría está asignada a productos, se quitará de todos ellos (los productos no se eliminan).</p>
     <p class="text-danger">@ViewData["ErrorMessage"]</p>
 
     <partial name="_DetallePartial" />

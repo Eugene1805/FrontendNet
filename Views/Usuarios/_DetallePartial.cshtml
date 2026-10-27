@@ -14,5 +14,11 @@
             <label asp-for="Rol" class="form-label form-text"></label>
             <div class="form-text text-body">@Model.Rol</div>
         </div>
+        @if (Model.Protegido)
+        {
+            <div class="mb-3 ps-3">
+                <span class="badge text-bg-secondary"><i class="bi bi-shield-lock"></i> Usuario protegido</span>
+            </div>
+        }
     </div>
 </div>

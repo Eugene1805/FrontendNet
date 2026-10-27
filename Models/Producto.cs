@@ -1,5 +1,4 @@
 using System.ComponentModel.DataAnnotations;
-using Microsoft.AspNetCore.Mvc;
 
 namespace FrontendNet.Models;
 
@@ -19,16 +18,13 @@ public class Producto
     [Display(Name = "Precio")]
     public decimal Precio
     { get; set; }
+    // Se lee del API como "archivoid"; JsonSerializerDefaults.Web es insensible a mayúsculas.
+    // Para escribir se usa ProductoRequest.
     [Display(Name = "Portada")]
     public int? ArchivoId
     {
         get; set;
     }
-    [Display(Name = "Eliminable")]
-    public bool Protegida
-    {
-        get; set;
-    } = false;
     public ICollection<Categoria>? Categorias { get; set; }
 
 }

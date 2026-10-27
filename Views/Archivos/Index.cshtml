@@ -17,7 +17,7 @@
         <a class="text-decoration-none" asp-action="Crear" title="Crear nuevo">Agregar nuevo</a>
     </div>
     <div class="col text-end">
-        Mostrando @Model.Count() elementos
+        Mostrando @Model.Count() de @ViewBag.Total elementos
     </div>
 </div>
 
@@ -87,6 +87,7 @@
             </tbody>
         </table>
     </div>
+    <partial name="_PaginacionPartial" />
 }
 else
 {

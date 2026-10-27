@@ -30,11 +30,11 @@
             <div class="col-md-8">
                 <div class="card-body small">
                     <div class="form-floating mb-3">
-                        <input asp-for="Portada" accept=".jpg" placeholder="Titulo" class="form-control" />
+                        <input asp-for="Portada" accept=".jpg,.jpeg" placeholder="Titulo" class="form-control" />
                         <label asp-for="Portada" class="form-label"></label>
                         <span asp-validation-for="Portada" class="text-danger"></span>
-                        <div class="form-text small">Tamaño máximo permitido es 100 KB</div>
-                        <div class="form-text small">Las extensiones permitidas son (jpg)</div>
+                        <div class="form-text small">Tamaño máximo permitido es 2 MB</div>
+                        <div class="form-text small">Las extensiones permitidas son (jpg, jpeg)</div>
                     </div>
                 </div>
             </div>

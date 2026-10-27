@@ -8,37 +8,33 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 namespace FrontendNet;
 
 [Authorize(Roles = "Administrador")]
-public class UsuariosController(UsuariosClientService usuarios, RolesClientService roles) : Controller
+public class UsuariosController(UsuariosClientService usuarios, RolesClientService roles) : AppController
 {
-    public async Task<IActionResult> Index()
+    public async Task<IActionResult> Index(int pagina = 1)
     {
-        List<Usuario>? lista = [];
         try
         {
-            lista = await usuarios.GetAsync();
+            var lista = await usuarios.GetAsync() ?? [];
+            return View(Pagina(lista, pagina));
         }
-        catch (HttpRequestException ex)
+        catch (Exception ex) when (EsErrorApi(ex))
         {
-            if (ex.StatusCode == System.Net.HttpStatusCode.Unauthorized)
-                return RedirectToAction("Salir", "Auth");
+            return ErrorGet(ex);
         }
-        return View(lista);
     }
 
     public async Task<IActionResult> Detalle(string id)
     {
-        Usuario? item = null;
         try
         {
-            item = await usuarios.GetAsync(id);
+            var item = await usuarios.GetAsync(id);
             if (item == null) return NotFound();
+            return View(item);
         }
-        catch (HttpRequestException ex)
+        catch (Exception ex) when (EsErrorApi(ex))
         {
-            if (ex.StatusCode == System.Net.HttpStatusCode.Unauthorized)
-                return RedirectToAction("Salir", "Auth");
+            return ErrorGet(ex);
         }
-        return View(item);
     }
 
     public async Task<IActionResult> Crear()
@@ -57,40 +53,40 @@ public class UsuariosController(UsuariosClientService usuarios, RolesClientServi
                 await usuarios.PostAsync(itemToCreate);
                 return RedirectToAction(nameof(Index));
             }
-            catch (HttpRequestException ex)
+            catch (Exception ex) when (EsErrorApi(ex))
             {
-                if (ex.StatusCode == System.Net.HttpStatusCode.Unauthorized)
-                    return RedirectToAction("Salir", "Auth");
+                // 409: el correo ya está registrado → se informa con el mensaje del API.
+                var salida = ManejaErrorApi(ex, "Email");
+                if (salida != null) return salida;
             }
         }
-        ModelState.AddModelError("Email", "No ha sido posible realizar la acción. Inténtelo nuevamente.");
-        await RolesDropDownListAsync();
+        await RolesDropDownListAsync(itemToCreate.Rol);
         return View(itemToCreate);
     }
 
     [HttpGet("[controller]/[action]/{email}")]
     public async Task<IActionResult> EditarAsync(string email)
     {
-        Usuario? itemToEdit = null;
         try
         {
-            itemToEdit = await usuarios.GetAsync(email);
+            var itemToEdit = await usuarios.GetAsync(email);
             if (itemToEdit == null) return NotFound();
+            ViewBag.PuedeEditar = PuedeModificar(itemToEdit.Email);
+            await RolesDropDownListAsync(itemToEdit.Rol);
+            return View(itemToEdit);
         }
-        catch (HttpRequestException ex)
+        catch (Exception ex) when (EsErrorApi(ex))
         {
-            if (ex.StatusCode == System.Net.HttpStatusCode.Unauthorized)
-                return RedirectToAction("Salir", "Auth");
+            return ErrorGet(ex);
         }
-        ViewBag.PuedeEditar = !(User.FindFirstValue(ClaimTypes.Email) == email);
-        await RolesDropDownListAsync(itemToEdit?.Rol);
-        return View(itemToEdit);
     }
 
     [HttpPost("[controller]/[action]/{email}")]
     public async Task<IActionResult> EditarAsync(string email, Usuario itemToEdit)
     {
         if (email != itemToEdit.Email) return NotFound();
+        // El frontend no es control de seguridad (DD-17), pero evita el intento obvio.
+        if (!PuedeModificar(email)) return Forbid();
         if (ModelState.IsValid)
         {
             try
@@ -98,59 +94,60 @@ public class UsuariosController(UsuariosClientService usuarios, RolesClientServi
                 await usuarios.PutAsync(itemToEdit);
                 return RedirectToAction(nameof(Index));
             }
-            catch (HttpRequestException ex)
+            catch (Exception ex) when (EsErrorApi(ex))
             {
-                if (ex.StatusCode == System.Net.HttpStatusCode.Unauthorized)
-                    return RedirectToAction("Salir", "Auth");
+                var salida = ManejaErrorApi(ex, "Nombre");
+                if (salida != null) return salida;
             }
         }
-        ModelState.AddModelError("Nombre", "No ha sido posible realizar la acción. Inténtelo nuevamente.");
-        ViewBag.PuedeEditar = !(User.FindFirstValue(ClaimTypes.Email) == email);
-        await RolesDropDownListAsync(itemToEdit?.Rol);
+        ViewBag.PuedeEditar = true;
+        await RolesDropDownListAsync(itemToEdit.Rol);
         return View(itemToEdit);
     }
 
-    public async Task<IActionResult> Eliminar(string id, bool? showError = false)
+    public async Task<IActionResult> Eliminar(string id, string? error = null)
     {
-        Usuario? itemToDelete = null;
         try
         {
-            itemToDelete = await usuarios.GetAsync(id);
+            var itemToDelete = await usuarios.GetAsync(id);
             if (itemToDelete == null) return NotFound();
-            if (showError.GetValueOrDefault())
-                ViewData["ErrorMessage"] = "No ha sido posible realizar la acción. Inténtelo nuevamente.";
+            ViewData["ErrorMessage"] = error;
+            // Ni el usuario actual ni los protegidos pueden eliminarse (D-05).
+            ViewBag.PuedeEditar = PuedeModificar(itemToDelete.Email) && !itemToDelete.Protegido;
+            return View(itemToDelete);
         }
-        catch (HttpRequestException ex)
+        catch (Exception ex) when (EsErrorApi(ex))
         {
-            if (ex.StatusCode == System.Net.HttpStatusCode.Unauthorized)
-                return RedirectToAction("Salir", "Auth");
+            return ErrorGet(ex);
         }
-        ViewBag.PuedeEditar = !(User.FindFirstValue(ClaimTypes.Email) == id);
-        return View(itemToDelete);
     }
 
     [HttpPost]
     public async Task<IActionResult> Eliminar(string id)
     {
-        if (ModelState.IsValid)
+        if (!PuedeModificar(id)) return Forbid();
+        try
         {
-            try
-            {
-                await usuarios.DeleteAsync(id);
-                return RedirectToAction(nameof(Index));
-            }
-            catch (HttpRequestException ex)
-            {
-                if (ex.StatusCode == System.Net.HttpStatusCode.Unauthorized)
-                    return RedirectToAction("Salir", "Auth");
-            }
+            await usuarios.DeleteAsync(id);
+            return RedirectToAction(nameof(Index));
         }
-        return RedirectToAction(nameof(Eliminar), new { id, showError = true });
+        catch (Exception ex) when (EsErrorApi(ex))
+        {
+            // 403: usuario protegido → se muestra el mensaje del API.
+            return ManejaErrorApi(ex) is { } salida
+                ? salida
+                : RedirectToAction(nameof(Eliminar), new { id, error = MensajePara(ex) });
+        }
     }
+
+    private bool PuedeModificar(string email) =>
+        !string.Equals(User.FindFirstValue(ClaimTypes.Email), email, StringComparison.OrdinalIgnoreCase);
 
     private async Task RolesDropDownListAsync(object? rolSeleccionado = null)
     {
-        var listado = await roles.GetAsync();
+        List<Rol> listado = [];
+        try { listado = await roles.GetAsync() ?? []; }
+        catch (Exception ex) when (EsErrorApi(ex)) { ModelState.AddModelError("", MensajePara(ex)); }
         ViewBag.Rol = new SelectList(listado, "Nombre", "Nombre", rolSeleccionado);
     }
 }

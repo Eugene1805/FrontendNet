@@ -14,9 +14,10 @@
 
 <h2 class="text-center mb-3">@ViewData["Title"] <small class="text-muted fs-5">@ViewData["SubTitle"]</small></h2>
 
-@if (ViewBag.PuedeEditar)
+@if (ViewBag.PuedeEditar == true)
 {
     <p class="text-danger">¿Está seguro que desea eliminar este elemento?</p>
+    <p class="text-danger">@ViewData["ErrorMessage"]</p>
     
     <partial name="_DetallePartial" />
     <form asp-action="Eliminar">
@@ -30,7 +31,9 @@ else
 {
     <div class="mt-5">
         <div class="alert alert-warning" role="alert">
-            El usuario actual "<strong>@Model.Email</strong>" no puede editarse.
+            @(Model.Protegido
+                ? $"El usuario \"{Model.Email}\" está protegido y no puede eliminarse."
+                : $"El usuario actual \"{Model.Email}\" no puede eliminarse.")
         </div>
     </div>
 

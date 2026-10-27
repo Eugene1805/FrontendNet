@@ -14,7 +14,7 @@
 
 <div class="row small mb-3">
     <div class="col text-end">
-        Mostrando @Model.Count() elementos
+        Mostrando @Model.Count() de @ViewBag.Total elementos
     </div>
 </div>
 
@@ -71,6 +71,7 @@
             </tbody>
         </table>
     </div>
+    <partial name="_PaginacionPartial" />
 }
 else
 {
