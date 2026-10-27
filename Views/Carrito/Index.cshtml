@@ -1,4 +1,7 @@
 @model Carrito
+@section Scripts {
+    <script src="~/js/carrito.js" asp-append-version="true"></script>
+}
 @{
     ViewData["Title"] = "Carrito de compras";
     ViewData["SubTitle"] = "Listado";
@@ -36,11 +39,11 @@
                         <td><a class="text-decoration-none" asp-controller="Comprar" asp-action="Detalle" asp-route-id="@item.ProductoId">@item.Titulo</a></td>
                         <td class="text-end">@item.Precio.ToString("C")</td>
                         <td>
-                            <form asp-action="Actualizar" method="post" class="d-flex gap-1">
+                            <form asp-action="Actualizar" method="post" data-autoenviar>
                                 <input type="hidden" name="productoid" value="@item.ProductoId" />
                                 <input type="number" name="cantidad" value="@item.Cantidad" min="1" max="99"
                                        class="form-control form-control-sm" style="width: 5rem;" aria-label="Cantidad" />
-                                <button type="submit" class="btn btn-sm btn-outline-secondary" title="Actualizar cantidad"><i class="bi bi-arrow-repeat"></i></button>
+                                <noscript><button type="submit" class="btn btn-sm btn-outline-secondary">Actualizar</button></noscript>
                             </form>
                         </td>
                         <td class="text-end">@item.Subtotal.ToString("C")</td>
