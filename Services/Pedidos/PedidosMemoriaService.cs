@@ -118,7 +118,8 @@ public class PedidosMemoriaService(PedidosAlmacen almacen, ICarritoService carri
         var pedido = Visible(id) ?? throw NoEncontrado();
         if (EsAdmin || pedido.Usuario != Email) throw NoEncontrado();
         if (pedido.Estado != EstadoPedido.Pendiente)
-            throw ApiException.De(HttpStatusCode.Conflict, "El pedido ya no puede cancelarse.");
+            throw ApiException.De(HttpStatusCode.Conflict,
+                $"Este pedido ya está en estado «{pedido.Estado}». Solo se pueden cancelar los pedidos pendientes; para otros casos comuníquese con la tienda.");
         almacen.Modifica(id, p => p.Estado = EstadoPedido.Cancelado);
         return Task.CompletedTask;
     }

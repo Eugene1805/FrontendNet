@@ -42,6 +42,13 @@
     </div>
 </div>
 
+@if (!esAdmin && Model.Estado != EstadoPedido.Pendiente && Model.Estado != EstadoPedido.Cancelado)
+{
+    <p class="text-center text-muted small mt-3">
+        Este pedido ya está en estado «@Model.Estado». Solo se pueden cancelar los pedidos pendientes.
+    </p>
+}
+
 <div class="text-center mt-3 d-flex justify-content-center gap-2 flex-wrap">
     <a class="btn btn-sm btn-outline-secondary" asp-action="Index">Regresar</a>
     @if (!esAdmin && Model.Estado == EstadoPedido.Pendiente)
