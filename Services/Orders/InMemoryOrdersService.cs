@@ -83,7 +83,7 @@ public class InMemoryOrdersService(OrdersStore almacen, IShoppingCartService sho
             Items = actual.Items.Select(i => new OrderItem
             {
                 ProductId = i.ProductId, Title = i.Title,                 UnitPrice = i.UnitPrice ?? "0.00",
-                Quantity = i.Quantity, Subtotal = i.Subtotal
+                Quantity = i.Quantity, Subtotal = i.Subtotal ?? "0.00"
             }).ToList()
         });
         await shoppingCart.VaciarAsync();
