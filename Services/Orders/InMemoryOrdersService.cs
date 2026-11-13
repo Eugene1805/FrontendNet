@@ -41,7 +41,7 @@ public class OrdersStore
         DeliveryAddressSnapshot = p.DeliveryAddressSnapshot, Items = p.Items.Select(i => new OrderItem
         {
             ProductId = i.ProductId, Title = i.Title, UnitPrice = i.UnitPrice,
-            Quantity = i.Quantity, Subtotal = i.Subtotal
+            Quantity = i.Quantity, Subtotal = i.Subtotal ?? "0.00"
         }).ToList()
     };
 }
