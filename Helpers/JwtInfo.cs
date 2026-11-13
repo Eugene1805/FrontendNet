@@ -4,12 +4,12 @@ using System.Text.Json;
 namespace FrontendNet.Helpers;
 
 /// <summary>
-/// Lee claims informativos (exp, iss, aud) de un JWT SIN validar la firma.
+/// Read claims informativos (exp, iss, aud) de un JWT SIN validar la firma.
 /// Solo sirve para mostrar/alinear tiempos; la autoridad es el API.
 /// </summary>
 public record JwtInfo(DateTimeOffset? Expira, string? Emisor, string? Audiencia)
 {
-    public static JwtInfo? Lee(string? jwt)
+    public static JwtInfo? Read(string? jwt)
     {
         if (string.IsNullOrWhiteSpace(jwt)) return null;
         var partes = jwt.Split('.');

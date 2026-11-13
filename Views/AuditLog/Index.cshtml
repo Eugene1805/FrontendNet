@@ -1,0 +1,83 @@
+@model List<AuditEntry>
+@{
+    ViewData["Title"] = "Audit log";
+    ViewData["SubTitle"] = "Listado";
+}
+
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb small">
+        <li class="breadcrumb-item active" aria-current="page">@ViewData["SubTitle"]</li>
+    </ol>
+</nav>
+
+<h2 class="text-center mb-3">@ViewData["Title"] <small class="text-muted fs-5">@ViewData["SubTitle"]</small></h2>
+
+<div class="row small mb-3">
+    <div class="col text-end">
+        Showing @Model.Count() de @ViewBag.Total items
+    </div>
+</div>
+
+@if (Model.Count() > 0)
+{
+    <div class="table-responsive">
+        <table class="table table-striped table-bordered small">
+            <thead class="text-center">
+                <tr>
+                    <th>
+                        @Html.DisplayNameFor(model => model.First().AuditLogId)
+                    </th>
+                    <th>
+                        @Html.DisplayNameFor(model => model.First().Action)
+                    </th>
+                    <th>
+                        @Html.DisplayNameFor(model => model.First().ElementId)
+                    </th>
+                    <th>
+                        @Html.DisplayNameFor(model => model.First().IP)
+                    </th>
+                    <th>
+                        @Html.DisplayNameFor(model => model.First().User)
+                    </th>
+                    <th>
+                        @Html.DisplayNameFor(model => model.First().Date)
+                    </th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model)
+                {
+                    <tr>
+                        <td>
+                            @Html.DisplayFor(modelItem => item.AuditLogId)
+                        </td>
+                        <td>
+                            @Html.DisplayFor(modelItem => item.Action)
+                        </td>
+                        <td>
+                            @Html.DisplayFor(modelItem => item.ElementId)
+                        </td>
+                        <td>
+                            @Html.DisplayFor(modelItem => item.IP)
+                        </td>
+                        <td>
+                            @Html.DisplayFor(modelItem => item.User)
+                        </td>
+                        <td>
+                            @TimeZoneInfo.ConvertTimeBySystemTimeZoneId(Convert.ToDateTime(item.Date), "America/Mexico_City")
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+    <partial name="_PaginationPartial" />
+}
+else
+{
+    <div class="mt-5">
+        <div class="alert alert-warning" role="alert">
+            No items were found. Please try again later.
+        </div>
+    </div>
+}

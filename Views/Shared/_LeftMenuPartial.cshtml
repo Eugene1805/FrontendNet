@@ -1,0 +1,26 @@
+@using System.Security.Claims
+<div class="me-auto navbar-nav">
+    @if (User.Identity?.IsAuthenticated == true)
+    {
+        @if (User.FindFirstValue(ClaimTypes.Role) == "Usuario")
+        {
+            <a class="nav-link" asp-controller="Shopping" asp-action="Index">Shop</a>
+            <a class="nav-link" asp-controller="ShoppingCart" asp-action="Index"><i class="bi-cart"></i> ShoppingCart
+                @await Component.InvokeAsync("CarritoResumen")</a>
+            <a class="nav-link" asp-controller="Orders" asp-action="Index">Mis pedidos</a>
+        }
+        else if (User.FindFirstValue(ClaimTypes.Role) == "Administrador")
+        {
+            <a class="nav-link" asp-controller="Products" asp-action="Index">Products</a>
+            <a class="nav-link" asp-controller="Categories" asp-action="Index">Categorias</a>
+            <a class="nav-link" asp-controller="Files" asp-action="Index">Files</a>
+            <a class="nav-link" asp-controller="Users" asp-action="Index">Users</a>
+            <a class="nav-link" asp-controller="Orders" asp-action="Index">Orders</a>
+            <a class="nav-link" asp-controller="AuditLog" asp-action="Index">AuditEntry</a>
+        }
+    }
+    else
+    {
+        <a class="nav-link" asp-controller="Home" asp-action="Index">Inicio</a>
+    }
+</div>

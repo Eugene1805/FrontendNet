@@ -1,5 +1,5 @@
 const imagen = document.querySelector(".portada");
-const archivo = document.getElementById("Portada");
+const archivo = document.getElementById("Cover");
 
 function CargaImagen() {
     const file = archivo.files;

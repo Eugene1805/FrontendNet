@@ -4,26 +4,26 @@ using System.Net.Http.Json;
 namespace FrontendNet.Models;
 
 /// <summary>
-/// Error devuelto por el API (o falla de red). Conserva el cuerpo { mensaje, errores[] }
+/// Error returned by the API (or a network failure). Preserves the { message, errors[] } body
 /// y es una HttpRequestException, por lo que sigue exponiendo StatusCode.
 /// </summary>
 public class ApiException : HttpRequestException
 {
     public ApiError? Error { get; }
     public TimeSpan? RetryAfter { get; }
-    public string Mensaje => string.IsNullOrWhiteSpace(Error?.Mensaje)
+    public override string Message => string.IsNullOrWhiteSpace(Error?.Message)
         ? "No ha sido posible realizar la acción. Inténtelo nuevamente."
-        : Error!.Mensaje!;
+        : Error!.Message!;
 
     public ApiException(HttpStatusCode? status, ApiError? error, TimeSpan? retryAfter = null, Exception? inner = null)
-        : base(error?.Mensaje ?? (status.HasValue ? $"El API respondió {(int)status.Value}." : "No fue posible comunicarse con el API."), inner, status)
+        : base(error?.Message ?? (status.HasValue ? $"El API respondió {(int)status.Value}." : "No fue posible comunicarse con el API."), inner, status)
     {
         Error = error;
         RetryAfter = retryAfter;
     }
 
-    public static ApiException De(HttpStatusCode status, string mensaje) =>
-        new(status, new ApiError { Status = (int)status, Mensaje = mensaje });
+    public static ApiException Create(HttpStatusCode status, string message) =>
+        new(status, new ApiError { Status = (int)status, Message = message });
 
     /// <summary>Construye la excepción leyendo el cuerpo de una respuesta no exitosa.</summary>
     public static async Task<ApiException> DesdeRespuestaAsync(HttpResponseMessage response, CancellationToken ct = default)

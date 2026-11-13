@@ -3,11 +3,11 @@ namespace FrontendNet.Models;
 public class Upload
 {
     [Display(Name = "ID del archivo")]
-    public int? ArchivoId { get; set; }
+    public int? FileId { get; set; }
     [Display(Name = "Nombre")]
-    public string? Nombre { get; set; }
+    public string? Name { get; set; }
     [Display(Name = "Portada")]
     [Required(ErrorMessage = "El campo {0} es obligatorio.")]
     [DataType(DataType.Upload)]
-    public required IFormFile Portada { get; set; }
+    public required IFormFile Cover { get; set; }
 }

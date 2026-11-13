@@ -6,24 +6,25 @@ public class HomeController : Controller
 {
     public IActionResult Index()
     {
-        return View();
+        return View("Index");
     }
 
     public IActionResult Error([FromServices] IHostEnvironment hostEnvironment)
     {
-        return View();
+        return View("Error");
     }
 
     public IActionResult AccessDenied()
     {
-        return View();
+        return View("AccessDenied");
     }
 
     /// <summary>Página para códigos de estado sin cuerpo (404, 403…) vía UseStatusCodePagesWithReExecute.</summary>
-    public IActionResult Estado(int id)
+    [ActionName("Estado")]
+    public IActionResult Status(int id)
     {
         Response.StatusCode = id;
         ViewBag.Codigo = id;
-        return View();
+        return View("Status");
     }
 }

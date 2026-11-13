@@ -1,0 +1,94 @@
+@model List<User>
+@{
+    ViewData["Title"] = "Users";
+    ViewData["SubTitle"] = "Listado";
+}
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb small">
+        <li class="breadcrumb-item active" aria-current="page">@ViewData["SubTitle"]</li>
+    </ol>
+</nav>
+<h2 class="text-center mb-3">@ViewData["Title"] <small class="text-muted fs-5">@ViewData["SubTitle"]</small></h2>
+<div class="row small mb-3">
+    <div class="col">
+        <a class="text-decoration-none" asp-action="Crear" title="Crear nuevo">Crear nuevo</a>
+    </div>
+    <div class="col text-end">
+        Showing @Model.Count() de @ViewBag.Total items
+    </div>
+</div>
+@if (Model.Count() > 0)
+{
+    <div class="table-responsive">
+        <table class="table table-striped table-bordered small">
+            <thead class="text-center">
+                <tr>
+                    <th>
+                        @Html.DisplayNameFor(model => model.First().Id)
+                    </th>
+                    <th>
+                        @Html.DisplayNameFor(model => model.First().Email)
+                    </th>
+                    <th>
+                        @Html.DisplayNameFor(model => model.First().Name)
+                    </th>
+                    <th>
+                        @Html.DisplayNameFor(model => model.First().Role)
+                    </th>
+                    <th>
+                        @Html.DisplayNameFor(model => model.First().Protected)
+                    </th>
+                    <th></th>
+                    <th></th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model)
+                {
+                    <tr>
+                        <td>
+                            @Html.DisplayFor(modelItem => item.Id)
+                        </td>
+                        <td>
+                            @Html.DisplayFor(modelItem => item.Email)
+                        </td>
+                        <td>
+                            @Html.DisplayFor(modelItem => item.Name)
+                        </td>
+                        <td>
+                            @Html.DisplayFor(modelItem => item.Role)
+                        </td>
+                        <td class="text-center">
+                            @if (item.Protected) { <i class="bi bi-shield-lock" title="User protegido"></i> }
+                        </td>
+                        <td width="1">
+                            <a class="text-decoration-none small text-uppercase" asp-action="Detalle"
+                               asp-route-id="@item.Email">Details</a>
+                        </td>
+                        <td width="1">
+                            <a class="text-decoration-none small text-uppercase" asp-action="Editar"
+                               asp-route-email="@item.Email">Edit</a>
+                        </td>
+                        <td width="1">
+                            @if (!item.Protected)
+                            {
+                                <a class="text-decoration-none small text-uppercase" asp-action="Eliminar"
+                                   asp-route-id="@item.Email">Delete</a>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+    <partial name="_PaginationPartial" />
+}
+else
+{
+    <div class="mt-5">
+        <div class="alert alert-warning" role="alert">
+            No items were found. Please try again later.
+        </div>
+    </div>
+}

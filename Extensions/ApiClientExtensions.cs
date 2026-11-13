@@ -13,8 +13,8 @@ public static class ApiClientExtensions
     {
         return services
             .AddHttpClient<TClient>(client => client.BaseAddress = new Uri(urlWebApi))
-            .AddHttpMessageHandler<EnviaBearerDelegatingHandler>()
-            .AddHttpMessageHandler<RefrescaTokenDelegatingHandler>();
+            .AddHttpMessageHandler<BearerTokenDelegatingHandler>()
+            .AddHttpMessageHandler<RefreshTokenDelegatingHandler>();
     }
 
     /// <summary>Igual que <see cref="AddApiClient{TClient}"/> pero registrado bajo una interfaz.</summary>
@@ -24,7 +24,7 @@ public static class ApiClientExtensions
     {
         return services
             .AddHttpClient<TService, TImplementation>(client => client.BaseAddress = new Uri(urlWebApi))
-            .AddHttpMessageHandler<EnviaBearerDelegatingHandler>()
-            .AddHttpMessageHandler<RefrescaTokenDelegatingHandler>();
+            .AddHttpMessageHandler<BearerTokenDelegatingHandler>()
+            .AddHttpMessageHandler<RefreshTokenDelegatingHandler>();
     }
 }

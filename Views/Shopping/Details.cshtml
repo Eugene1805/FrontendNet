@@ -1,0 +1,46 @@
+@model Product
+@{
+    ViewData["Title"] = Model.Title;
+}
+
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb small">
+        <li class="breadcrumb-item"><a class="text-decoration-none" asp-action="Index">Shop</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Details</li>
+    </ol>
+</nav>
+
+<div class="card">
+    <div class="row g-0">
+        <div class="col-md-4 text-center p-3 bg-white">
+            <img src="@(Model.FileId == null ? "https://placehold.co/300x300/FFF/999?text=Articulo" : $"{ViewBag.Url}/api/files/{Model.FileId}")"
+                 alt="@Model.Title" class="img-fluid" style="max-height: 320px;">
+        </div>
+        <div class="col-md-8">
+            <div class="card-body">
+                <h3 class="card-title">@Model.Title</h3>
+                <h4 class="text-success">@Html.DisplayFor(m => m.Price)</h4>
+                <p class="card-text">
+                    @foreach (var cat in Model.Categories ?? [])
+                    {
+                        <span class="badge rounded-pill text-bg-warning">@cat.Name</span>
+                    }
+                </p>
+                <p class="card-text" style="white-space: pre-line;">@Model.Description</p>
+                <form asp-controller="ShoppingCart" asp-action="Agregar" method="post" class="row g-2 align-items-center">
+                    <input type="hidden" name="productId" value="@Model.ProductId" />
+                    <div class="col-auto">
+                        <label for="cantidad" class="col-form-label small">Quantity</label>
+                    </div>
+                    <div class="col-auto">
+                        <input type="number" id="cantidad" name="cantidad" value="1" min="1" max="99"
+                               class="form-control form-control-sm" style="width: 5rem;" />
+                    </div>
+                    <div class="col-auto">
+                        <button type="submit" class="btn btn-primary btn-sm"><i class="bi bi-cart-plus"></i> Add al carrito</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

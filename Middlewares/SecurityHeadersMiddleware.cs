@@ -10,7 +10,7 @@ public class SecurityHeadersMiddleware(RequestDelegate next, IConfiguration conf
     public static string ConstruyeCsp(IConfiguration configuration, IHostEnvironment env)
     {
         var imgs = new List<string> { "'self'", "data:", "https://placehold.co" };
-        // Modo Directo: el navegador pide las imágenes al API, así que su origen debe permitirse.
+        // Modo Directo: el navegador pide las imágenes al API, así que su source debe permitirse.
         if (string.Equals(configuration["Imagenes:Modo"], "Directo", StringComparison.OrdinalIgnoreCase))
         {
             var api = configuration["UrlWebAPIPublica"] is { Length: > 0 } p ? p : configuration["UrlWebAPI"];

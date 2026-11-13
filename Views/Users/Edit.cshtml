@@ -1,0 +1,73 @@
+@model User
+@{
+    ViewData["Title"] = "Users";
+    ViewData["SubTitle"] = "Edit";
+}
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
+
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb small">
+        <li class="breadcrumb-item"><a class="text-decoration-none" title="Back to list"
+                asp-action="Index">List</a></li>
+        <li class="breadcrumb-item active" aria-current="page">@ViewData["SubTitle"]</li>
+    </ol>
+</nav>
+
+<h2 class="text-center mb-3">@ViewData["Title"] <small class="text-muted fs-5">@ViewData["SubTitle"]</small></h2>
+
+@if (ViewBag.PuedeEditar == true)
+{
+    <form asp-action="Editar" asp-route-email="@Model.Email">
+        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+        <div class="card mt-3">
+            <div class="card-body small">
+                <div class="form-floating mb-3">
+                    <input asp-for="Id" placeholder="Id" readonly class="form-control-plaintext" />
+                    <label asp-for="Id" class="form-label"></label>
+                </div>
+                <div class="form-floating mb-3">
+                    <input asp-for="Email" placeholder="Email" readonly class="form-control-plaintext" />
+                    <label asp-for="Email" class="form-label"></label>
+                </div>
+                <div class="form-floating mb-3">
+                    <input asp-for="Name" placeholder="Nombre" class="form-control" />
+                    <label asp-for="Name" class="form-label"></label>
+                    <span asp-validation-for="Name" class="text-danger"></span>
+                </div>
+                <div class="form-floating mb-3">
+                    <select class="form-select" asp-for="Role" asp-items="ViewBag.Role">
+                        <option value="">Select a user role</option>
+                    </select>
+                    <label asp-for="Role" class="control-label"></label>
+                    <span asp-validation-for="Role" class="text-danger"></span>
+                </div>
+                <div class="form-floating mb-3">
+                    <input asp-for="Password" placeholder="Nueva contraseña" class="form-control" autocomplete="new-password" />
+                    <label asp-for="Password" class="form-label"></label>
+                    <span asp-validation-for="Password" class="text-danger"></span>
+                    <div class="form-text small">Déjelo vacío para conservar la password actual.</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="text-center mt-3">
+            <button id="btnEnviar" type="submit" class="btn btn-sm btn-primary">Save</button>
+            <a class="btn btn-sm btn-outline-secondary" asp-action="Index" title="Cancel">Cancel</a>
+        </div>
+    </form>
+}
+else
+{
+    <div class="mt-5">
+        <div class="alert alert-warning" role="alert">
+            El usuario actual "<strong>@Model.Email</strong>" no puede editarse.
+        </div>
+    </div>
+
+    <div class="text-center mt-3">
+        <a class="btn btn-sm btn-outline-secondary" asp-action="Index" title="Cancel">Cancel</a>
+    </div>
+}

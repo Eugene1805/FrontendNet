@@ -7,7 +7,7 @@ namespace FrontendNet.Services;
 
 public class AuthClientService(HttpClient client, IHttpContextAccessor httpContextAccessor)
 {
-    public async Task<AuthUser> ObtenTokenAsync(string email, string password)
+    public async Task<AuthUser> GetTokenAsync(string email, string password)
     {
         Login usuario = new() { Email = email, Password = password };
         HttpResponseMessage response;
@@ -28,15 +28,15 @@ public class AuthClientService(HttpClient client, IHttpContextAccessor httpConte
         }
     }
 
-    public async Task IniciaSesionAsync(IEnumerable<Claim> claims)
+    public async Task SignInAsync(IEnumerable<Claim> claims)
     {
         var httpContext = httpContextAccessor.HttpContext
             ?? throw new InvalidOperationException("No hay un HttpContext activo para iniciar sesión.");
-        var lista = claims.ToList();
-        var claimsIdentity = new ClaimsIdentity(lista, CookieAuthenticationDefaults.AuthenticationScheme);
+        var items = claims.ToList();
+        var claimsIdentity = new ClaimsIdentity(items, CookieAuthenticationDefaults.AuthenticationScheme);
         var props = new AuthenticationProperties();
         // DD-07: la cookie expira junto con el JWT para evitar sesiones "zombi" (D-14).
-        var info = JwtInfo.Lee(lista.FirstOrDefault(c => c.Type == "jwt")?.Value);
+        var info = JwtInfo.Read(items.FirstOrDefault(c => c.Type == "jwt")?.Value);
         if (info?.Expira is { } exp)
             props.ExpiresUtc = exp;
         var principal = new ClaimsPrincipal(claimsIdentity);

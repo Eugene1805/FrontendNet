@@ -1,0 +1,70 @@
+@model Order
+@{
+    bool esAdmin = User.IsInRole("Administrador");
+    ViewData["Title"] = $"Order #{Model.PedidoId}";
+}
+
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb small">
+        <li class="breadcrumb-item"><a class="text-decoration-none" asp-action="Index">List</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Details</li>
+    </ol>
+</nav>
+
+<h2 class="text-center mb-3">@ViewData["Title"] <span class="badge text-bg-secondary fs-6">@Model.Estado</span></h2>
+
+<div class="card mt-3">
+    <div class="card-body small">
+        <div class="mb-2"><span class="text-muted">Date:</span> @Model.Date.ToLocalTime().ToString("g")</div>
+        <div class="mb-2"><span class="text-muted">User:</span> @Model.User</div>
+        <div class="mb-3" style="white-space: pre-line;"><span class="text-muted">Shipping address:</span> @Model.DireccionEnvio</div>
+        <div class="table-responsive">
+            <table class="table table-sm table-bordered align-middle">
+                <thead class="text-center">
+                    <tr><th>Product</th><th>Price unitario</th><th>Quantity</th><th>Subtotal</th></tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model.Items)
+                    {
+                        <tr>
+                            <td>@item.Title</td>
+                            <td class="text-end">@item.UnitPrice</td>
+                            <td class="text-center">@item.Quantity</td>
+                            <td class="text-end">@item.Subtotal</td>
+                        </tr>
+                    }
+                </tbody>
+                <tfoot>
+                    <tr><th colspan="3" class="text-end">Total</th><th class="text-end">@Model.Total</th></tr>
+                </tfoot>
+            </table>
+        </div>
+    </div>
+</div>
+
+@if (!esAdmin && Model.Estado != OrderStatus.Pendiente && Model.Estado != OrderStatus.Cancelado)
+{
+    <p class="text-center text-muted small mt-3">
+        Este pedido ya está en estado «@Model.Estado». Solo se pueden cancelar los pedidos pendientes.
+    </p>
+}
+
+<div class="text-center mt-3 d-flex justify-content-center gap-2 flex-wrap">
+    <a class="btn btn-sm btn-outline-secondary" asp-action="Index">Regresar</a>
+    @if (!esAdmin && Model.Estado == OrderStatus.Pendiente)
+    {
+        <form asp-action="Cancelar" asp-route-id="@Model.PedidoId" method="post">
+            <button type="submit" class="btn btn-sm btn-outline-danger">Cancel order</button>
+        </form>
+    }
+    @if (esAdmin)
+    {
+        @foreach (var siguiente in OrderStatus.GetNextStatuses(Model.Estado))
+        {
+            <form asp-action="Estado" asp-route-id="@Model.PedidoId" method="post">
+                <input type="hidden" name="estado" value="@siguiente" />
+                <button type="submit" class="btn btn-sm @(siguiente == OrderStatus.Cancelado ? "btn-outline-danger" : "btn-primary")">Marcar como @siguiente</button>
+            </form>
+        }
+    }
+</div>
