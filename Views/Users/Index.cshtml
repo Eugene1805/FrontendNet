@@ -1,7 +1,7 @@
 @model List<User>
 @{
     ViewData["Title"] = "Users";
-    ViewData["SubTitle"] = "Listado";
+    ViewData["SubTitle"] = "List";
 }
 <nav aria-label="breadcrumb">
     <ol class="breadcrumb small">
@@ -11,10 +11,10 @@
 <h2 class="text-center mb-3">@ViewData["Title"] <small class="text-muted fs-5">@ViewData["SubTitle"]</small></h2>
 <div class="row small mb-3">
     <div class="col">
-        <a class="text-decoration-none" asp-action="Crear" title="Crear nuevo">Crear nuevo</a>
+        <a class="text-decoration-none" asp-action="Crear" title="Create new">Create new</a>
     </div>
     <div class="col text-end">
-        Showing @Model.Count() de @ViewBag.Total items
+        Showing @Model.Count() of @ViewBag.Total items
     </div>
 </div>
 @if (Model.Count() > 0)

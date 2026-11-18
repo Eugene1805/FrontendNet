@@ -23,8 +23,10 @@ public class HomeController : Controller
     [ActionName("Estado")]
     public IActionResult Status(int id)
     {
-        Response.StatusCode = id;
-        ViewBag.Codigo = id;
+        // SEC-09: Valida rango válido de HTTP StatusCode (400-599) para evitar ArgumentOutOfRangeException
+        var codigo = id is >= 400 and <= 599 ? id : StatusCodes.Status500InternalServerError;
+        Response.StatusCode = codigo;
+        ViewBag.Codigo = codigo;
         return View("Status");
     }
 }

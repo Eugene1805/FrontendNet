@@ -1,6 +1,6 @@
 @model Order
 @{
-    bool esAdmin = User.IsInRole("Administrador");
+    bool esAdmin = User.IsInRole("Administrador") || User.IsInRole("ADMIN");
     ViewData["Title"] = $"Order #{Model.PedidoId}";
 }
 
@@ -21,7 +21,7 @@
         <div class="table-responsive">
             <table class="table table-sm table-bordered align-middle">
                 <thead class="text-center">
-                    <tr><th>Product</th><th>Price unitario</th><th>Quantity</th><th>Subtotal</th></tr>
+                    <tr><th>Product</th><th>Unit price</th><th>Quantity</th><th>Subtotal</th></tr>
                 </thead>
                 <tbody>
                     @foreach (var item in Model.Items)
@@ -45,12 +45,12 @@
 @if (!esAdmin && Model.Estado != OrderStatus.Pendiente && Model.Estado != OrderStatus.Cancelado)
 {
     <p class="text-center text-muted small mt-3">
-        Este pedido ya está en estado «@Model.Estado». Solo se pueden cancelar los pedidos pendientes.
+        This order is in «@Model.Estado» status. Only pending orders can be cancelled.
     </p>
 }
 
 <div class="text-center mt-3 d-flex justify-content-center gap-2 flex-wrap">
-    <a class="btn btn-sm btn-outline-secondary" asp-action="Index">Regresar</a>
+    <a class="btn btn-sm btn-outline-secondary" asp-action="Index">Back</a>
     @if (!esAdmin && Model.Estado == OrderStatus.Pendiente)
     {
         <form asp-action="Cancelar" asp-route-id="@Model.PedidoId" method="post">
@@ -63,7 +63,7 @@
         {
             <form asp-action="Estado" asp-route-id="@Model.PedidoId" method="post">
                 <input type="hidden" name="estado" value="@siguiente" />
-                <button type="submit" class="btn btn-sm @(siguiente == OrderStatus.Cancelado ? "btn-outline-danger" : "btn-primary")">Marcar como @siguiente</button>
+                <button type="submit" class="btn btn-sm @(siguiente == OrderStatus.Cancelado ? "btn-outline-danger" : "btn-primary")">Mark as @siguiente</button>
             </form>
         }
     }

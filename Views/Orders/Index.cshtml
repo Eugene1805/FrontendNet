@@ -1,16 +1,16 @@
 @model List<OrderSummary>
 @{
-    bool esAdmin = User.IsInRole("Administrador");
-    ViewData["Title"] = esAdmin ? "Orders" : "Mis pedidos";
-    ViewData["SubTitle"] = "Listado";
+    bool esAdmin = User.IsInRole("Administrador") || User.IsInRole("ADMIN");
+    ViewData["Title"] = esAdmin ? "Orders" : "My orders";
+    ViewData["SubTitle"] = "List";
 }
 <h2 class="text-center mb-3">@ViewData["Title"] <small class="text-muted fs-5">@ViewData["SubTitle"]</small></h2>
 
 <form asp-action="Index" method="get" class="row small g-2 mb-3">
     <div class="col-12 col-sm-6 col-md-4 col-lg-3">
         <div class="input-group input-group-sm">
-            <select name="estado" class="form-select" asp-items="ViewBag.Statuss" aria-label="Status">
-                <option value="">Todos los estados</option>
+            <select name="estado" class="form-select" asp-items="ViewBag.Estados" aria-label="Status">
+                <option value="">All statuses</option>
             </select>
             <button class="btn btn-primary" type="submit" title="Filtrar"><i class="bi bi-funnel"></i></button>
         </div>
@@ -61,7 +61,7 @@ else
 {
     <div class="mt-5">
         <div class="alert alert-warning" role="alert">
-            No se han encontrado pedidos.
+            No orders found.
         </div>
     </div>
 }

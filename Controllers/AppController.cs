@@ -27,7 +27,7 @@ public abstract class AppController : Controller
         _ => null
     };
 
-    /// <summary>Mensaje seguro para mostrar al usuario (sin detalles técnicos).</summary>
+    /// <summary>Safe message to show to the user (without technical details).</summary>
     protected static string GetMessageFor(Exception ex)
     {
         if (ex is ApiException api)
@@ -35,16 +35,16 @@ public abstract class AppController : Controller
             if (api.StatusCode == HttpStatusCode.TooManyRequests)
             {
                 var wait = api.RetryAfter is { } t && t > TimeSpan.Zero
-                    ? $" Intente de nuevo en {Math.Max(1, (int)Math.Ceiling(t.TotalMinutes))} minuto(s)."
-                    : " Intente de nuevo más tarde.";
-                return "Demasiados intentos." + wait;
+                    ? $" Please try again in {Math.Max(1, (int)Math.Ceiling(t.TotalMinutes))} minute(s)."
+                    : " Please try again later.";
+                return "Too many attempts." + wait;
             }
             if ((int?)api.StatusCode is >= 400 and < 500 && !string.IsNullOrWhiteSpace(api.Error?.Message))
                 return api.Error!.Message!;
             if (api.StatusCode == null)
-                return "No fue posible comunicarse con el servidor. Inténtelo de nuevo más tarde.";
+                return "Unable to communicate with the server. Please try again later.";
         }
-        return "No ha sido posible realizar la acción. Inténtelo nuevamente.";
+        return "Could not perform the action. Please try again.";
     }
 
     /// <summary>
@@ -74,12 +74,15 @@ public abstract class AppController : Controller
         Response.StatusCode = (int?)Estado(ex) is >= 400 and < 600 and var code ? code : 503;
         return View("ErrorApi", GetMessageFor(ex));
     }
-    /// <summary>Paginate en el frontend (el API no page) y publica los datos del paginador en ViewBag.</summary>
+    /// <summary>Paginate on the frontend and publish pagination metadata in ViewBag.</summary>
     protected List<T> Paginate<T>(IEnumerable<T> source, int page)
     {
         var pageSize = HttpContext.RequestServices.GetRequiredService<IConfiguration>().GetValue("Paginacion:Tamano", 20);
         var items = new PagedList<T>(source, page, pageSize);
+        ViewBag.Page = items.Paginate;
         ViewBag.Paginate = items.Paginate;
+        ViewBag.Pagina = items.Paginate;
+        ViewBag.TotalPages = items.TotalPaginas;
         ViewBag.TotalPaginas = items.TotalPaginas;
         ViewBag.Total = items.Total;
         return items.Items;

@@ -44,4 +44,38 @@ public class AuthClientService(HttpClient client, IHttpContextAccessor httpConte
         // La petición en curso también debe ver el JWT renovado.
         httpContext.User = principal;
     }
+
+    /// <summary>
+    /// Normaliza los claims de roles entre el backend (ADMIN, BUYER) y las vistas (Administrador, Usuario)
+    /// garantizando consistencia en RBAC y contratos de autorización.
+    /// </summary>
+    public static List<Claim> NormalizaClaims(AuthUser token)
+    {
+        var claims = new List<Claim>
+        {
+            new(ClaimTypes.Email, token.Email),
+            new(ClaimTypes.Name, token.Name),
+            new("jwt", token.Jwt)
+        };
+
+        var rawRole = (token.Profile ?? token.Role ?? "").Trim();
+        if (rawRole.Equals("ADMIN", StringComparison.OrdinalIgnoreCase) ||
+            rawRole.Equals("Administrador", StringComparison.OrdinalIgnoreCase))
+        {
+            claims.Add(new Claim(ClaimTypes.Role, "ADMIN"));
+            claims.Add(new Claim(ClaimTypes.Role, "Administrador"));
+        }
+        else if (rawRole.Equals("BUYER", StringComparison.OrdinalIgnoreCase) ||
+                 rawRole.Equals("Usuario", StringComparison.OrdinalIgnoreCase))
+        {
+            claims.Add(new Claim(ClaimTypes.Role, "BUYER"));
+            claims.Add(new Claim(ClaimTypes.Role, "Usuario"));
+        }
+        else if (!string.IsNullOrEmpty(rawRole))
+        {
+            claims.Add(new Claim(ClaimTypes.Role, rawRole));
+        }
+
+        return claims;
+    }
 }

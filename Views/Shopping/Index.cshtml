@@ -1,14 +1,14 @@
 @model List<Product>
 @{
     ViewData["Title"] = "Shop";
-    ViewData["SubTitle"] = "Listado";
+    ViewData["SubTitle"] = "List";
 }
 <h2 class="text-center mb-3">@ViewData["Title"] <small class="text-muted fs-5">@ViewData["SubTitle"]</small></h2>
 <form asp-action="Index" method="get" class="row small g-2 mb-3">
     <div class="col-12 col-md-4">
         <div class="input-group input-group-sm">
             <input name="s" id="s" value="@ViewBag.search" type="search" class="form-control"
-                   placeholder="Buscar por titulo">
+                   placeholder="Search by title">
             <button class="btn btn-primary" type="submit" title="Buscar"><i class="bi bi-search"></i></button>
         </div>
     </div>
@@ -19,11 +19,11 @@
     </div>
     <div class="col-6 col-md-3">
         <select name="orden" class="form-select form-select-sm" asp-items="ViewBag.Ordenes" aria-label="Orden">
-            <option value="">Orden predeterminado</option>
+            <option value="">Default order</option>
         </select>
     </div>
     <div class="col-12 col-md-2">
-        <button class="btn btn-sm btn-outline-primary w-100" type="submit">Aplicar</button>
+        <button class="btn btn-sm btn-outline-primary w-100" type="submit">Apply</button>
     </div>
 </form>
 <div class="row small mb-3">

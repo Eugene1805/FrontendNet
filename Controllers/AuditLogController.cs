@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace FrontendNet;
 
-[Authorize(Roles = "ADMIN")]
+[Authorize(Roles = "ADMIN,Administrador")]
 public class AuditLogController(AuditLogClientService auditLog) : AppController
 {
     public async Task<IActionResult> IndexAsync(int page = 1)

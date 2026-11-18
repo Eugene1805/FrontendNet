@@ -45,6 +45,17 @@ var urlWebApi = builder.Configuration["UrlWebAPI"]
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddTransient<BearerTokenDelegatingHandler>();
 builder.Services.AddTransient<RefreshTokenDelegatingHandler>();
+builder.Services.AddHttpClient<CloudflareTurnstileService>();
+
+// Soporte para proxies perimetrales Cloudflare (CF-Connecting-IP)
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
+{
+    options.ForwardedHeaders = Microsoft.AspNetCore.HttpOverrides.ForwardedHeaders.XForwardedFor | Microsoft.AspNetCore.HttpOverrides.ForwardedHeaders.XForwardedProto;
+    options.ForwardedForHeaderName = "CF-Connecting-IP";
+    options.ForwardedProtoHeaderName = "X-Forwarded-Proto";
+    options.KnownNetworks.Clear();
+    options.KnownProxies.Clear();
+});
 
 // El login es el único cliente que no envía el token
 builder.Services.AddHttpClient<AuthClientService>(client => client.BaseAddress = new Uri(urlWebApi));
@@ -89,6 +100,8 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
 
 var app = builder.Build();
 
+app.UseForwardedHeaders();
+
 // Agregamos un middleware para el manejo de errores
 app.UseExceptionHandler("/Home/Error");
 app.UseStatusCodePagesWithReExecute("/Home/Estado/{0}");
@@ -115,7 +128,9 @@ app.MapControllerRoute("legacy-images", "Imagenes/{action=Index}/{id?}", new { c
 app.MapControllerRoute("legacy-orders", "Pedidos/{action=Index}/{id?}", new { controller = "Orders" });
 app.MapControllerRoute("legacy-profile", "Perfil/{action=Index}/{id?}", new { controller = "Profile" });
 app.MapControllerRoute("legacy-products", "Productos/{action=Index}/{id?}", new { controller = "Products" });
-app.MapControllerRoute("legacy-users", "BUYERs/{action=Index}/{id?}", new { controller = "Users" });
+app.MapControllerRoute("legacy-users", "Usuarios/{action=Index}/{id?}", new { controller = "Users" });
+app.MapControllerRoute("legacy-users-en", "Users/{action=Index}/{id?}", new { controller = "Users" });
+app.MapControllerRoute("legacy-users-compat", "BUYERs/{action=Index}/{id?}", new { controller = "Users" });
 app.MapControllerRoute("default", "{controller=Home}/{action=Index}/{id?}");
 
 app.Run();

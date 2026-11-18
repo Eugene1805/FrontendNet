@@ -22,13 +22,14 @@ public class SecurityHeadersMiddleware(RequestDelegate next, IConfiguration conf
             $"img-src {string.Join(' ', imgs)}",
             // Los estilos en línea (atributos style) se usan en varias vistas; los scripts en línea NO se permiten.
             "style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net",
-            "script-src 'self' https://cdnjs.cloudflare.com",
+            "script-src 'self' https://cdnjs.cloudflare.com https://challenges.cloudflare.com",
+            "frame-src https://challenges.cloudflare.com",
             "font-src 'self' https://cdn.jsdelivr.net",
             // dotnet watch usa websockets para recargar el navegador.
-            // Los CDN se permiten en connect-src para que las herramientas de desarrollo puedan leer los .map.
+            // Los CDN y Turnstile se permiten en connect-src.
             env.IsDevelopment()
-                ? "connect-src 'self' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net ws: wss:"
-                : "connect-src 'self' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net",
+                ? "connect-src 'self' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://challenges.cloudflare.com ws: wss:"
+                : "connect-src 'self' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://challenges.cloudflare.com",
             "object-src 'none'",
             "base-uri 'self'",
             "form-action 'self'",
@@ -45,6 +46,19 @@ public class SecurityHeadersMiddleware(RequestDelegate next, IConfiguration conf
         h["X-Frame-Options"] = "DENY";
         h["Referrer-Policy"] = "strict-origin-when-cross-origin";
         h["Permissions-Policy"] = "camera=(), microphone=(), geolocation=()";
+
+        // SEC-04: Previene almacenamiento en caché de respuestas dinámicas en Cloudflare Edge / proxies
+        var path = context.Request.Path;
+        if (!path.StartsWithSegments("/api/files") &&
+            !path.StartsWithSegments("/css") &&
+            !path.StartsWithSegments("/js") &&
+            !path.StartsWithSegments("/images") &&
+            !path.Value!.EndsWith(".svg", StringComparison.OrdinalIgnoreCase))
+        {
+            h["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0";
+            h["Pragma"] = "no-cache";
+        }
+
         return next(context);
     }
 }

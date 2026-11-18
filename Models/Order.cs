@@ -28,17 +28,16 @@ public static class OrderStatus
     };
 }
 
-/// <summary>Body de POST api/orders.</summary>
+/// <summary>Body for POST api/orders.</summary>
 public class NewOrder
 {
-    [Required(ErrorMessage = "El campo {0} es obligatorio.")]
-    [StringLength(300, MinimumLength = 10, ErrorMessage = "El campo {0} debe tener entre {2} y {1} caracteres.")]
+    [Required(ErrorMessage = "The {0} field is required.")]
+    [StringLength(300, MinimumLength = 10, ErrorMessage = "The {0} field must be between {2} and {1} characters.")]
     [DataType(DataType.MultilineText)]
-    [Display(Name = "Dirección de envío")]
+    [Display(Name = "Shipping address")]
     public string AddressId
     {
         get => _direccion;
-        // Se recortan los espacios antes de validar: "Av Xalapa " no debe cumplir el mínimo por el espacio final.
         set => _direccion = value?.Trim() ?? "";
     }
     private string _direccion = "";
@@ -50,7 +49,7 @@ public class NewOrder
 
 public class OrderSummary
 {
-    [Display(Name = "Pedido")]
+    [Display(Name = "Order")]
     public string OrderId { get; set; } = "";
     [JsonIgnore]
     public string PedidoId { get => OrderId; set => OrderId = value; }
@@ -67,7 +66,7 @@ public class OrderSummary
 
 public class Order : OrderSummary
 {
-    [Display(Name = "Dirección de envío")]
+    [Display(Name = "Shipping address")]
     public string? DeliveryAddressSnapshot { get; set; }
     [JsonIgnore]
     public string DireccionEnvio { get => DeliveryAddressSnapshot ?? ""; set => DeliveryAddressSnapshot = value; }

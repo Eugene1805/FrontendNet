@@ -1,27 +1,33 @@
 @model Login
+@inject Microsoft.Extensions.Configuration.IConfiguration Configuration
 @{
     ViewData["Title"] = "Sign in";
+    var siteKey = Configuration["Cloudflare:TurnstileSiteKey"];
 }
 
 <form asp-action="Index">
     <div class="card mx-auto" style="max-width: 500px;">
         <div class="card-body">
-            <h1 class="h3 text-center">Bienvenido a Mercado Libre</h1>
-            <h2 class="h6 text-center text-muted">Facultad de Estadística e Informática</h2>
+            <h1 class="h3 text-center">Welcome to Mercado Libre</h1>
+            <h2 class="h6 text-center text-muted">School of Statistics and Informatics</h2>
             <h5 class="card-title text-center mt-4">@ViewData["Title"]</h5>
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
             <div class="form-floating mb-3">
-                <input asp-for="Email" class="form-control" placeholder="Email">
+                <input asp-for="Email" class="form-control" placeholder="Email" autocomplete="username">
                 <label asp-for="Email" class="form-label"></label>
                 <span asp-validation-for="Email" class="text-danger"></span>
             </div>
             <div class="form-floating mb-3">
-                <input asp-for="Password" class="form-control" placeholder="Password">
+                <input asp-for="Password" class="form-control" placeholder="Password" autocomplete="current-password">
                 <label asp-for="Password" class="form-label"></label>
                 <span asp-validation-for="Password" class="text-danger"></span>
             </div>
-            <p class="card-text small">Ingrese sus credenciales para poder disfrutar de todo el contenido de la plataforma.</p>
-            <p class="card-text small text-end"><a asp-controller="Home" asp-action="Index" class="link-primary text-decoration-none">Crear cuenta</a></p>
+            @if (!string.IsNullOrWhiteSpace(siteKey))
+            {
+                <div class="cf-turnstile d-flex justify-content-center mb-3" data-sitekey="@siteKey" data-theme="auto"></div>
+            }
+            <p class="card-text small">Enter your credentials to access all the platform's content.</p>
+            <p class="card-text small text-end"><a asp-controller="Home" asp-action="Index" class="link-primary text-decoration-none">Create account</a></p>
         </div>
         <div class="card-footer text-center">
             <button type="submit" class="btn btn-primary">Sign in</button>
@@ -31,4 +37,8 @@
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+    @if (!string.IsNullOrWhiteSpace(siteKey))
+    {
+        <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+    }
 }

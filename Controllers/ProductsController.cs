@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace FrontendNet;
 
-[Authorize(Roles = "ADMIN")]
+[Authorize(Roles = "ADMIN,Administrador,SELLER,Vendedor")]
 public class ProductsController(ProductClientService products,
     CategoryClientService categories,
     FilesClientService files) : AppController

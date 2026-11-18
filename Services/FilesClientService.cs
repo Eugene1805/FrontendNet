@@ -44,10 +44,11 @@ public class FilesClientService(HttpClient client)
 
     private static async Task<MultipartFormDataContent> CreateFormAsync(Upload fileRecord)
     {
+        var safeFileName = Path.GetFileName(fileRecord.Cover.FileName);
         using var memoryStream = new MemoryStream();
         await fileRecord.Cover.CopyToAsync(memoryStream);
         var fileContent = new ByteArrayContent(memoryStream.ToArray());
         fileContent.Headers.ContentType = MediaTypeHeaderValue.Parse(fileRecord.Cover.ContentType);
-        return new MultipartFormDataContent { { fileContent, "file", fileRecord.Cover.FileName! } };
+        return new MultipartFormDataContent { { fileContent, "file", safeFileName } };
     }
 }

@@ -3,7 +3,7 @@
     ViewData["Title"] = codigo switch
     {
         404 => "Page not found",
-        403 => "Acceso denegado",
+        403 => "Access denied",
         401 => "Sign-in required",
         _ => "A problem occurred"
     };
@@ -13,8 +13,8 @@
     <h1 class="text-danger">@codigo <small class="fs-4">@ViewData["Title"]</small></h1>
     <p class="text-muted">
         @(codigo == 404
-            ? "El elemento que busca no existe o ya no está disponible."
-            : "No fue posible atender la solicitud.")
+            ? "The requested resource does not exist or is no longer available."
+            : "The request could not be processed.")
     </p>
-    <p><a class="btn btn-sm btn-outline-secondary" asp-controller="Home" asp-action="Index">Ir al inicio</a></p>
+    <p><a class="btn btn-sm btn-outline-secondary" asp-controller="Home" asp-action="Index">Go to Home</a></p>
 </div>

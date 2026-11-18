@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace FrontendNet;
 
-[Authorize(Roles = "BUYER")]
+[Authorize(Roles = "BUYER,Usuario")]
 public class ShoppingCartController(IShoppingCartService shoppingCart) : AppController
 {
     public async Task<IActionResult> Index()

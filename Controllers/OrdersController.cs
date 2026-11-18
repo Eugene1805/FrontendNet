@@ -10,7 +10,7 @@ namespace FrontendNet;
 /// User: checkout, sus orders y cancelar. ADMIN: todos los orders y cambio de estado.
 /// El API (o la simulación) decide qué orders puede ver cada rol; un pedido ajeno responde 404.
 /// </summary>
-[Authorize(Roles = "BUYER,ADMIN")]
+[Authorize(Roles = "BUYER,Usuario,ADMIN,Administrador")]
 public class OrdersController(IOrdersService orders, IShoppingCartService shoppingCart) : AppController
 {
     public async Task<IActionResult> Index(string? estado, int page = 1)
@@ -43,7 +43,7 @@ public class OrdersController(IOrdersService orders, IShoppingCartService shoppi
         }
     }
 
-    [Authorize(Roles = "BUYER")]
+    [Authorize(Roles = "BUYER,Usuario")]
     public async Task<IActionResult> Checkout()
     {
         try
@@ -64,7 +64,7 @@ public class OrdersController(IOrdersService orders, IShoppingCartService shoppi
     }
 
     [HttpPost]
-    [Authorize(Roles = "BUYER")]
+    [Authorize(Roles = "BUYER,Usuario")]
     public async Task<IActionResult> CheckoutAsync(NewOrder model)
     {
         // El único método de pago disponible es el simulado (DD-04); el cliente no decide otra cosa.
@@ -95,7 +95,7 @@ public class OrdersController(IOrdersService orders, IShoppingCartService shoppi
     }
 
     [HttpPost]
-    [Authorize(Roles = "BUYER")]
+    [Authorize(Roles = "BUYER,Usuario")]
     [ActionName("Cancelar")]
     public async Task<IActionResult> Cancel(string id)
     {
@@ -114,7 +114,7 @@ public class OrdersController(IOrdersService orders, IShoppingCartService shoppi
     }
 
     [HttpPost]
-    [Authorize(Roles = "ADMIN")]
+    [Authorize(Roles = "ADMIN,Administrador")]
     [ActionName("Estado")]
     public async Task<IActionResult> Status(string id, string status)
     {

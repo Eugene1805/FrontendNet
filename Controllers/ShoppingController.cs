@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace FrontendNet;
 
-[Authorize(Roles = "BUYER")]
+[Authorize(Roles = "BUYER,Usuario")]
 public class ShoppingController(ProductClientService products, CategoryClientService categories) : AppController
 {
     // Record (propiedades) y no tupla: SelectList localiza "Valor"/"Texto" por reflexión sobre propiedades.

@@ -24,11 +24,11 @@ public class OrdersClientService(HttpClient client) : IOrdersService
     }
 
     public async Task<Order?> GetOrderAsync(string id)
-        => await client.GetFromJsonAsync<Order>($"api/orders/{id}");
+        => await client.GetFromJsonAsync<Order>($"api/orders/{Url.Encode(id)}");
 
     public async Task ChangeStatusAsync(string id, string status, string? reason = null)
     {
-        using var response = await client.PutAsJsonAsync($"api/orders/{id}/status", new { status, reason });
+        using var response = await client.PutAsJsonAsync($"api/orders/{Url.Encode(id)}/status", new { status, reason });
     }
 
     public Task CancelAsync(string id, string reason)

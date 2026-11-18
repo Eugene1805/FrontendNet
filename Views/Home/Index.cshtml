@@ -45,23 +45,23 @@
         <div class="card-body">
             <h5 class="card-title">Shop products with free shipping on Mercado Libre Mexico.</h5>
             <p class="card-text">Find thousands of brands and products at incredible prices.</p>
-            <p class="card-text">Mercado Libre es la mayor plataforma de comercio electrónico de la región, donde
-                millones de compradores y vendedores se encuentran para realizar transacciones con una amplia gama de
-                productos y servicios, a precio fijo.</p>
+            <p class="card-text">Mercado Libre is the largest e-commerce platform in the region, where
+                millions of buyers and sellers meet to conduct transactions across a wide range of
+                products and services at a fixed price.</p>
             @if (User.Identity?.IsAuthenticated == true)
             {
-                if (User.FindFirstValue(ClaimTypes.Role) == "Usuario")
+                if (User.IsInRole("Usuario") || User.IsInRole("BUYER"))
                 {
-                    <a asp-controller="Shopping" class="btn btn-primary">Comenzar a comprar</a>
+                    <a asp-controller="Shopping" class="btn btn-primary">Start shopping</a>
                 }
-                else if (User.FindFirstValue(ClaimTypes.Role) == "Administrador")
+                else if (User.IsInRole("Administrador") || User.IsInRole("ADMIN"))
                 {
-                    <a asp-controller="Products" class="btn btn-primary">Administrar catálogos</a>
+                    <a asp-controller="Products" class="btn btn-primary">Manage catalogs</a>
                 }
             }
             else
             {
-                <a asp-controller="Auth" class="btn btn-primary">Iniciar sesión</a>
+                <a asp-controller="Auth" class="btn btn-primary">Sign in</a>
             }
         </div>
     </div>

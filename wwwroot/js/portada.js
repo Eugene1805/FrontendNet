@@ -2,15 +2,18 @@ const imagen = document.querySelector(".portada");
 const archivo = document.getElementById("Cover");
 
 function CargaImagen() {
-    const file = archivo.files;
-    if (file.length) {
-        const fileReader = new FileReader();
-        fileReader.onload = function (event) {
-            imagen.setAttribute('src', event.target.result);
-        }
-        fileReader.readAsDataURL(file[0]);
-    }
+    if (!archivo || !archivo.files || !archivo.files.length || !imagen) return;
+    const file = archivo.files[0];
+    if (!file.type || !file.type.match(/^image\/(jpeg|jpg)$/i)) return;
+
+    const fileReader = new FileReader();
+    fileReader.onload = function (event) {
+        imagen.setAttribute('src', event.target.result);
+    };
+    fileReader.readAsDataURL(file);
 }
 
-archivo.addEventListener("change", CargaImagen);
-CargaImagen();
+if (archivo) {
+    archivo.addEventListener("change", CargaImagen);
+    CargaImagen();
+}

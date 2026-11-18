@@ -1,10 +1,10 @@
 @inject IConfiguration Configuration
-@if (Configuration.GetValue<bool>("Features:CompraSimulada") && User.IsInRole("Usuario"))
+@if (Configuration.GetValue<bool>("Features:CompraSimulada") && (User.IsInRole("Usuario") || User.IsInRole("BUYER")))
 {
     <div class="alert alert-info small py-2" role="status">
         <i class="bi bi-info-circle"></i>
-        <strong>Modo simulación:</strong> el carrito y los pedidos se guardan solo en este servidor web
-        (se pierden al reiniciarlo) y el pago es simulado. El backend todavía no ofrece estos servicios.
+        <strong>Simulation mode:</strong> cart and orders are stored only in this web server
+        (they are lost on restart) and payment is simulated. The backend does not yet offer these services.
     </div>
 }
 @if (TempData["Exito"] is string exito)

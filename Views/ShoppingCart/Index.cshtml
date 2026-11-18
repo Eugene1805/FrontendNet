@@ -4,7 +4,7 @@
 }
 @{
     ViewData["Title"] = "Shopping cart";
-    ViewData["SubTitle"] = "Listado";
+    ViewData["SubTitle"] = "List";
 }
 <h2 class="text-center mb-3">@ViewData["Title"] <small class="text-muted fs-5">@ViewData["SubTitle"]</small></h2>
 
@@ -43,14 +43,14 @@
                                 <input type="hidden" name="productId" value="@item.ProductId" />
                                 <input type="number" name="cantidad" value="@item.Quantity" min="1" max="99"
                                        class="form-control form-control-sm" style="width: 5rem;" aria-label="Quantity" />
-                                <noscript><button type="submit" class="btn btn-sm btn-outline-secondary">Actualizar</button></noscript>
+                                <noscript><button type="submit" class="btn btn-sm btn-outline-secondary">Update</button></noscript>
                             </form>
                         </td>
                         <td class="text-end">@item.Subtotal</td>
                         <td>
                             <form asp-action="Quitar" method="post">
                                 <input type="hidden" name="productId" value="@item.ProductId" />
-                                <button type="submit" class="btn btn-sm btn-outline-danger" title="Quitar"><i class="bi bi-trash"></i></button>
+                                <button type="submit" class="btn btn-sm btn-outline-danger" title="Remove"><i class="bi bi-trash"></i></button>
                             </form>
                         </td>
                     </tr>
@@ -67,16 +67,16 @@
     </div>
     <div class="d-flex justify-content-between">
         <form asp-action="Vaciar" method="post">
-            <button type="submit" class="btn btn-sm btn-outline-secondary">Vaciar carrito</button>
+            <button type="submit" class="btn btn-sm btn-outline-secondary">Empty cart</button>
         </form>
-        <a class="btn btn-sm btn-primary" asp-controller="Orders" asp-action="Checkout">Confirmar compra</a>
+        <a class="btn btn-sm btn-primary" asp-controller="Orders" asp-action="Checkout">Proceed to checkout</a>
     </div>
 }
 else
 {
     <div class="mt-5">
         <div class="alert alert-warning" role="alert">
-            Su carrito está vacío. <a asp-controller="Shopping" asp-action="Index">Explore los productos</a>.
+            Your cart is empty. <a asp-controller="Shopping" asp-action="Index">Explore products</a>.
         </div>
     </div>
 }

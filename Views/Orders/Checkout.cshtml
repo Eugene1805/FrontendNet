@@ -10,8 +10,8 @@
 
 <nav aria-label="breadcrumb">
     <ol class="breadcrumb small">
-        <li class="breadcrumb-item"><a class="text-decoration-none" asp-controller="ShoppingCart" asp-action="Index">ShoppingCart</a></li>
-        <li class="breadcrumb-item active" aria-current="page">Confirmar</li>
+        <li class="breadcrumb-item"><a class="text-decoration-none" asp-controller="ShoppingCart" asp-action="Index">Cart</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Confirm</li>
     </ol>
 </nav>
 
@@ -19,7 +19,7 @@
 
 <div class="card mt-3">
     <div class="card-body small">
-        <h5 class="card-title">Resumen</h5>
+        <h5 class="card-title">Order Summary</h5>
         <table class="table table-sm align-middle">
             <tbody>
                 @foreach (var item in carrito.Items)
@@ -34,7 +34,7 @@
                 <tr><th>Total</th><th class="text-end">@carrito.Subtotal</th></tr>
             </tfoot>
         </table>
-        <p class="text-muted mb-0">Los precios se calculan en el servidor al confirmar. Payment method: simulado.</p>
+        <p class="text-muted mb-0">Prices are calculated on the server upon confirmation. Payment method: simulated.</p>
     </div>
 </div>
 
@@ -43,14 +43,14 @@
     <div class="card mt-3">
         <div class="card-body small">
             <div class="form-floating mb-3">
-                <textarea asp-for="DireccionEnvio" placeholder="Dirección" class="form-control" style="height: 100px"></textarea>
+                <textarea asp-for="DireccionEnvio" placeholder="Shipping Address" class="form-control" style="height: 100px"></textarea>
                 <label asp-for="DireccionEnvio" class="form-label"></label>
                 <span asp-validation-for="DireccionEnvio" class="text-danger"></span>
             </div>
         </div>
     </div>
     <div class="text-center mt-3">
-        <button id="btnEnviar" type="submit" class="btn btn-sm btn-primary">Confirmar pedido</button>
+        <button id="btnEnviar" type="submit" class="btn btn-sm btn-primary">Confirm order</button>
         <a class="btn btn-sm btn-outline-secondary" asp-controller="ShoppingCart" asp-action="Index">Cancel</a>
     </div>
 </form>

@@ -25,15 +25,12 @@ public class RefreshTokenDelegatingHandler(AuthClientService auth, IHttpContextA
             if (!string.IsNullOrEmpty(jwt))
             {
                 var user = httpContextAccessor.HttpContext?.User;
-                var claims = new List<Claim>
+                if (user?.Identity?.IsAuthenticated == true)
                 {
-                    // Mismos claims que se guardan al iniciar sesión en AuthController
-                    new(ClaimTypes.Email, user?.FindFirstValue(ClaimTypes.Email) ?? ""),
-                    new(ClaimTypes.Name, user?.FindFirstValue(ClaimTypes.Name) ?? ""),
-                    new("jwt", jwt),
-                    new(ClaimTypes.Role, user?.FindFirstValue(ClaimTypes.Role) ?? ""),
-                };
-                await auth.SignInAsync(claims);
+                    var claims = user.Claims.Where(c => c.Type != "jwt").ToList();
+                    claims.Add(new Claim("jwt", jwt));
+                    await auth.SignInAsync(claims);
+                }
             }
         }
 

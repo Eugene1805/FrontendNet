@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace FrontendNet;
 
-[Authorize(Roles = "ADMIN")]
+[Authorize(Roles = "ADMIN,Administrador")]
 public class FilesController(FilesClientService files, IConfiguration configuration) : AppController
 {
     private long MaxBytes => configuration.GetValue("Archivos:MaxBytes", 2097152L);
@@ -14,13 +14,24 @@ public class FilesController(FilesClientService files, IConfiguration configurat
     /// <summary>Valida antes de enviar; el API sigue siendo el árbitro final (D-07).</summary>
     private string? ValidaArchivo(IFormFile archivo)
     {
+        if (archivo == null || archivo.Length == 0)
+            return "No se ha seleccionado ningún archivo.";
         if (archivo.Length > MaxBytes)
             return $"El archivo de {archivo.Length / 1024} KB supera el tamaño máximo permitido ({MaxBytes / 1024} KB).";
-        var extension = Path.GetExtension(archivo.FileName).ToLowerInvariant();
+        var safeFileName = Path.GetFileName(archivo.FileName);
+        var extension = Path.GetExtension(safeFileName).ToLowerInvariant();
         if (!Extensiones.Contains(extension))
-            return $"El archivo {Path.GetFileName(archivo.FileName)} no tiene una extensión permitida ({string.Join(", ", Extensiones)}).";
-        if (archivo.ContentType != "image/jpeg")
+            return $"El archivo {safeFileName} no tiene una extensión permitida ({string.Join(", ", Extensiones)}).";
+        if (archivo.ContentType != "image/jpeg" && archivo.ContentType != "image/jpg")
             return $"El tipo de contenido '{archivo.ContentType}' no está permitido; solo se aceptan imágenes JPEG.";
+
+        // SEC-06: Validación de magic bytes para evitar polyglots / archivos maliciosos camuflados
+        using var stream = archivo.OpenReadStream();
+        Span<byte> header = stackalloc byte[3];
+        var read = stream.Read(header);
+        if (read < 3 || header[0] != 0xFF || header[1] != 0xD8 || header[2] != 0xFF)
+            return "El archivo no contiene un formato de imagen JPEG válido.";
+
         return null;
     }
 

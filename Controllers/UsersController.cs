@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace FrontendNet;
 
-[Authorize(Roles = "ADMIN")]
+[Authorize(Roles = "ADMIN,Administrador")]
 public class UsersController(UsersClientService users, RolesClientService roles) : AppController
 {
     public async Task<IActionResult> Index(int page = 1)
@@ -67,6 +67,8 @@ public class UsersController(UsersClientService users, RolesClientService roles)
         return View("Create", itemToCreate);
     }
 
+    [HttpGet("Users/[action]/{email}")]
+    [HttpGet("Usuarios/[action]/{email}")]
     [HttpGet("BUYERs/[action]/{email}")]
     [ActionName("Editar")]
     public async Task<IActionResult> EditAsync(string email)
@@ -85,6 +87,8 @@ public class UsersController(UsersClientService users, RolesClientService roles)
         }
     }
 
+    [HttpPost("Users/[action]/{email}")]
+    [HttpPost("Usuarios/[action]/{email}")]
     [HttpPost("BUYERs/[action]/{email}")]
     [ActionName("Editar")]
     public async Task<IActionResult> EditAsync(string email, User itemToEdit)

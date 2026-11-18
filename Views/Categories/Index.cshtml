@@ -1,7 +1,7 @@
 @model List<Category>
 @{
     ViewData["Title"] = "Categories";
-    ViewData["SubTitle"] = "Listado";
+    ViewData["SubTitle"] = "List";
 }
 
 <nav aria-label="breadcrumb">
@@ -14,7 +14,7 @@
 
 <div class="row small mb-3">
     <div class="col">
-        <a class="text-decoration-none" asp-action="Crear" title="Crear nuevo">Crear nueva</a>
+        <a class="text-decoration-none" asp-action="Crear" title="Create new">Create new</a>
     </div>
     <div class="col text-end">
         Showing @Model.Count() items

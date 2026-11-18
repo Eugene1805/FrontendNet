@@ -16,7 +16,7 @@
 
 @if (ViewBag.PuedeEditar == true)
 {
-    <p class="text-danger">¿Está seguro que desea eliminar este elemento?</p>
+    <p class="text-danger">Are you sure you want to delete this item?</p>
     <p class="text-danger">@ViewData["ErrorMessage"]</p>
     
     <partial name="_DetailsPartial" />
@@ -32,8 +32,8 @@ else
     <div class="mt-5">
         <div class="alert alert-warning" role="alert">
             @(Model.Protected
-                ? $"El usuario \"{Model.Email}\" está protegido y no puede eliminarse."
-                : $"El usuario actual \"{Model.Email}\" no puede eliminarse.")
+                ? $"User \"{Model.Email}\" is protected and cannot be deleted."
+                : $"The current user \"{Model.Email}\" cannot be deleted.")
         </div>
     </div>
 
