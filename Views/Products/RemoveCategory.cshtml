@@ -1,6 +1,6 @@
 @model ProductCategory
 @{
-    ViewData["Title"] = "Products";
+    ViewData["Title"] = "Productos";
     ViewData["SubTitle"] = "Remover categoría";
 }
 
@@ -10,10 +10,10 @@
 
 <nav aria-label="breadcrumb">
     <ol class="breadcrumb small">
-        <li class="breadcrumb-item"><a class="text-decoration-none" title="Back to list"
-                asp-action="Index">List</a></li>
+        <li class="breadcrumb-item"><a class="text-decoration-none" title="Volver al listado"
+                asp-action="Index">Listado</a></li>
         <li class="breadcrumb-item"><a class="text-decoration-none" title="Regresar a las categorías"
-                asp-action="Categorias" asp-route-id="@Model.Product?.ProductId">Categories</a></li>
+                asp-action="Categorias" asp-route-id="@Model.Product?.ProductId">Categorías</a></li>
         <li class="breadcrumb-item active" aria-current="page">@ViewData["SubTitle"]</li>
     </ol>
 </nav>
@@ -29,7 +29,7 @@
     <div class="card mt-3">
         <div class="card-body small">
             <div class="form-floating mb-3">
-                <input asp-for="CategoryId" placeholder="CategoriaId" readonly class="form-control-plaintext" />
+                <input asp-for="CategoryId" placeholder="Id" readonly class="form-control-plaintext" />
                 <label asp-for="CategoryId" class="form-label"></label>
             </div>
             <div class="mb-3 ps-3">
@@ -42,9 +42,9 @@
     <div class="text-center mt-3">
         <button id="btnEnviar" type="submit" class="btn btn-sm btn-primary">Remover</button>
         <a class="btn btn-sm btn-outline-secondary" asp-action="Categorias" asp-route-id="@Model.Product?.ProductId"
-           title="Cancel">Cancel</a>
+           title="Cancelar">Cancelar</a>
     </div>
 </form>
 
-<h4 class="my-3">Product</h4>
+<h4 class="my-3">Producto</h4>
 <partial name="_CardPartial" model="Model.Product" />

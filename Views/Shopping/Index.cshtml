@@ -1,34 +1,34 @@
 @model List<Product>
 @{
-    ViewData["Title"] = "Shop";
-    ViewData["SubTitle"] = "List";
+    ViewData["Title"] = "Tienda";
+    ViewData["SubTitle"] = "Listado";
 }
 <h2 class="text-center mb-3">@ViewData["Title"] <small class="text-muted fs-5">@ViewData["SubTitle"]</small></h2>
 <form asp-action="Index" method="get" class="row small g-2 mb-3">
     <div class="col-12 col-md-4">
         <div class="input-group input-group-sm">
             <input name="s" id="s" value="@ViewBag.search" type="search" class="form-control"
-                   placeholder="Search by title">
+                   placeholder="Buscar por título">
             <button class="btn btn-primary" type="submit" title="Buscar"><i class="bi bi-search"></i></button>
         </div>
     </div>
     <div class="col-6 col-md-3">
-        <select name="categoryId" class="form-select form-select-sm" asp-items="ViewBag.Categories" aria-label="Category">
-            <option value="">All categories</option>
+        <select name="categoryId" class="form-select form-select-sm" asp-items="ViewBag.Categories" aria-label="Categoría">
+            <option value="">Todas las categorías</option>
         </select>
     </div>
     <div class="col-6 col-md-3">
         <select name="orden" class="form-select form-select-sm" asp-items="ViewBag.Ordenes" aria-label="Orden">
-            <option value="">Default order</option>
+            <option value="">Orden predeterminado</option>
         </select>
     </div>
     <div class="col-12 col-md-2">
-        <button class="btn btn-sm btn-outline-primary w-100" type="submit">Apply</button>
+        <button class="btn btn-sm btn-outline-primary w-100" type="submit">Aplicar</button>
     </div>
 </form>
 <div class="row small mb-3">
     <div class="col text-end">
-        Showing @Model.Count de @ViewBag.Total items
+        Mostrando @Model.Count de @ViewBag.Total artículos
     </div>
 </div>
 @if (Model.Count > 0)
@@ -47,7 +47,7 @@ else
 {
     <div class="mt-5">
         <div class="alert alert-warning" role="alert">
-            No items were found. Please try again later.
+            No se encontraron artículos. Por favor, intente más tarde.
         </div>
     </div>
 }

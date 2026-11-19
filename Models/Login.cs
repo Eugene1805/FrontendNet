@@ -4,13 +4,13 @@ namespace FrontendNet.Models;
 
 public class Login
 {
-    [Required(ErrorMessage = "The {0} field is required.")]
-    [EmailAddress(ErrorMessage = "The {0} field is not a valid email address.")]
-    [Display(Name = "Email")]
+    [Required(ErrorMessage = "El campo {0} es obligatorio.")]
+    [EmailAddress(ErrorMessage = "El campo {0} no es un correo electrónico válido.")]
+    [Display(Name = "Correo electrónico")]
     public required string Email { get; set; }
 
-    [Required(ErrorMessage = "The {0} field is required.")]
+    [Required(ErrorMessage = "El campo {0} es obligatorio.")]
     [DataType(DataType.Password)]
-    [Display(Name = "Password")]
+    [Display(Name = "Contraseña")]
     public required string Password { get; set; }
 }

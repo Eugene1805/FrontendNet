@@ -1,7 +1,7 @@
 @model List<AuditEntry>
 @{
-    ViewData["Title"] = "Audit log";
-    ViewData["SubTitle"] = "List";
+    ViewData["Title"] = "Bitácora";
+    ViewData["SubTitle"] = "Listado";
 }
 
 <nav aria-label="breadcrumb">
@@ -14,7 +14,7 @@
 
 <div class="row small mb-3">
     <div class="col text-end">
-        Showing @Model.Count() of @ViewBag.Total items
+        Mostrando @Model.Count() de @ViewBag.Total elementos
     </div>
 </div>
 
@@ -77,7 +77,7 @@ else
 {
     <div class="mt-5">
         <div class="alert alert-warning" role="alert">
-            No items were found. Please try again later.
+            No se encontraron elementos. Por favor, intente más tarde.
         </div>
     </div>
 }

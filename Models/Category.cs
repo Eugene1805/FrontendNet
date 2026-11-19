@@ -6,10 +6,10 @@ public class Category
 {
     [Display(Name = "Id")]
     public int? CategoryId { get; set; }
-    [Required(ErrorMessage = "The {0} field is required.")]
-    [Display(Name = "Name")]
+    [Required(ErrorMessage = "El campo {0} es obligatorio.")]
+    [Display(Name = "Nombre")]
     public required string Name { get; set; }
-    [Display(Name = "Protected")]
+    [Display(Name = "Protegida")]
     [JsonConverter(typeof(NumericBooleanConverter))]
     public bool Protected { get; set; } = false;
 }

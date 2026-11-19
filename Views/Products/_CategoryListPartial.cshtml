@@ -3,10 +3,10 @@
 <div class="row small mb-3">
     <div class="col">
         <a class="text-decoration-none" asp-action="CategoriasAgregar" asp-route-id='@ViewData["ProductoId"]'
-           title="Add">Add</a>
+           title="Agregar">Agregar</a>
     </div>
     <div class="col text-end">
-        Showing @Model.Count() items
+        Mostrando @Model.Count() elementos
     </div>
 </div>
 
@@ -37,7 +37,7 @@
                         </td>
                         <td width="1">
                             <a class="text-decoration-none small text-uppercase" asp-action="CategoriasRemover"
-                               asp-route-id='@ViewData["ProductoId"]' asp-route-categoryId="@item.CategoryId">Delete</a>
+                               asp-route-id='@ViewData["ProductoId"]' asp-route-categoryId="@item.CategoryId">Eliminar</a>
                         </td>
                     </tr>
                 }
@@ -49,7 +49,7 @@ else
 {
     <div class="mt-5">
         <div class="alert alert-warning small" role="alert">
-            No se han encontrado items.
+            No se han encontrado categorías.
         </div>
     </div>
 }

@@ -1,7 +1,7 @@
 @model ProfileName
 @{
-    ViewData["Title"] = "User profile";
-    ViewData["SubTitle"] = "Edit name";
+    ViewData["Title"] = "Perfil de usuario";
+    ViewData["SubTitle"] = "Editar nombre";
 }
 
 @section Scripts {
@@ -10,7 +10,7 @@
 
 <nav aria-label="breadcrumb">
     <ol class="breadcrumb small">
-        <li class="breadcrumb-item"><a class="text-decoration-none" asp-action="Index">Profile</a></li>
+        <li class="breadcrumb-item"><a class="text-decoration-none" asp-action="Index">Perfil</a></li>
         <li class="breadcrumb-item active" aria-current="page">@ViewData["SubTitle"]</li>
     </ol>
 </nav>
@@ -22,14 +22,14 @@
     <div class="card mt-3">
         <div class="card-body small">
             <div class="form-floating mb-3">
-                <input asp-for="Name" placeholder="Name" class="form-control" />
+                <input asp-for="Name" placeholder="Nombre" class="form-control" />
                 <label asp-for="Name" class="form-label"></label>
                 <span asp-validation-for="Name" class="text-danger"></span>
             </div>
         </div>
     </div>
     <div class="text-center mt-3">
-        <button id="btnEnviar" type="submit" class="btn btn-sm btn-primary">Save</button>
-        <a class="btn btn-sm btn-outline-secondary" asp-action="Index">Cancel</a>
+        <button id="btnEnviar" type="submit" class="btn btn-sm btn-primary">Guardar</button>
+        <a class="btn btn-sm btn-outline-secondary" asp-action="Index">Cancelar</a>
     </div>
 </form>

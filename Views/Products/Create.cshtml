@@ -1,7 +1,7 @@
 @model Product
 @{
-    ViewData["Title"] = "Products";
-    ViewData["SubTitle"] = "Create";
+    ViewData["Title"] = "Productos";
+    ViewData["SubTitle"] = "Crear";
 }
 
 @section Scripts {
@@ -11,8 +11,8 @@
 
 <nav aria-label="breadcrumb">
     <ol class="breadcrumb small">
-        <li class="breadcrumb-item"><a class="text-decoration-none" title="Back to list"
-                asp-action="Index">List</a></li>
+        <li class="breadcrumb-item"><a class="text-decoration-none" title="Volver al listado"
+                asp-action="Index">Listado</a></li>
         <li class="breadcrumb-item active" aria-current="page">@ViewData["SubTitle"]</li>
     </ol>
 </nav>
@@ -30,7 +30,7 @@
             <div class="col-md-8">
                 <div class="card-body small">
                     <div class="form-floating mb-3">
-                        <input asp-for="Title" placeholder="Titulo" class="form-control" />
+                        <input asp-for="Title" placeholder="Título" class="form-control" />
                         <label asp-for="Title" class="form-label"></label>
                         <span asp-validation-for="Title" class="text-danger"></span>
                     </div>
@@ -42,13 +42,13 @@
                     <div class="form-floating mb-3">
                         <select class="form-select" asp-for="FileId"
                                 asp-items="ViewBag.File">
-                            <option value="">Product sin portada</option>
+                            <option value="">Producto sin portada</option>
                         </select>
                         <label asp-for="FileId" class="control-label"></label>
                         <span asp-validation-for="FileId" class="text-danger"></span>
                     </div>
                     <div class="form-floating mb-3">
-                        <textarea asp-for="Description" placeholder="Poster" class="form-control form-control-sm"
+                        <textarea asp-for="Description" placeholder="Descripción" class="form-control form-control-sm"
                                   style="height: 100px"></textarea>
                         <label asp-for="Description" class="form-label"></label>
                         <span asp-validation-for="Description" class="text-danger"></span>
@@ -59,7 +59,7 @@
     </div>
 
     <div class="text-center mt-3">
-        <button id="btnEnviar" type="submit" class="btn btn-sm btn-primary">Save</button>
-        <a class="btn btn-sm btn-outline-secondary" asp-action="Index" title="Cancel">Cancel</a>
+        <button id="btnEnviar" type="submit" class="btn btn-sm btn-primary">Guardar</button>
+        <a class="btn btn-sm btn-outline-secondary" asp-action="Index" title="Cancelar">Cancelar</a>
     </div>
 </form>

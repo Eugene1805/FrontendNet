@@ -31,10 +31,10 @@ public static class OrderStatus
 /// <summary>Body for POST api/orders.</summary>
 public class NewOrder
 {
-    [Required(ErrorMessage = "The {0} field is required.")]
-    [StringLength(300, MinimumLength = 10, ErrorMessage = "The {0} field must be between {2} and {1} characters.")]
+    [Required(ErrorMessage = "El campo {0} es obligatorio.")]
+    [StringLength(300, MinimumLength = 10, ErrorMessage = "El campo {0} debe tener entre {2} y {1} caracteres.")]
     [DataType(DataType.MultilineText)]
-    [Display(Name = "Shipping address")]
+    [Display(Name = "Dirección de envío")]
     public string AddressId
     {
         get => _direccion;
@@ -49,7 +49,7 @@ public class NewOrder
 
 public class OrderSummary
 {
-    [Display(Name = "Order")]
+    [Display(Name = "Pedido")]
     public string OrderId { get; set; } = "";
     [JsonIgnore]
     public string PedidoId { get => OrderId; set => OrderId = value; }
@@ -66,7 +66,7 @@ public class OrderSummary
 
 public class Order : OrderSummary
 {
-    [Display(Name = "Shipping address")]
+    [Display(Name = "Dirección de envío")]
     public string? DeliveryAddressSnapshot { get; set; }
     [JsonIgnore]
     public string DireccionEnvio { get => DeliveryAddressSnapshot ?? ""; set => DeliveryAddressSnapshot = value; }

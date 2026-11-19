@@ -35,16 +35,16 @@ public abstract class AppController : Controller
             if (api.StatusCode == HttpStatusCode.TooManyRequests)
             {
                 var wait = api.RetryAfter is { } t && t > TimeSpan.Zero
-                    ? $" Please try again in {Math.Max(1, (int)Math.Ceiling(t.TotalMinutes))} minute(s)."
-                    : " Please try again later.";
-                return "Too many attempts." + wait;
+                    ? $" Intente de nuevo en {Math.Max(1, (int)Math.Ceiling(t.TotalMinutes))} minuto(s)."
+                    : " Intente de nuevo más tarde.";
+                return "Demasiados intentos." + wait;
             }
             if ((int?)api.StatusCode is >= 400 and < 500 && !string.IsNullOrWhiteSpace(api.Error?.Message))
                 return api.Error!.Message!;
             if (api.StatusCode == null)
-                return "Unable to communicate with the server. Please try again later.";
+                return "No fue posible comunicarse con el servidor. Inténtelo de nuevo más tarde.";
         }
-        return "Could not perform the action. Please try again.";
+        return "No ha sido posible realizar la acción. Inténtelo nuevamente.";
     }
 
     /// <summary>

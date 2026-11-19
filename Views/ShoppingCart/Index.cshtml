@@ -3,14 +3,14 @@
     <script src="~/js/carrito.js" asp-append-version="true"></script>
 }
 @{
-    ViewData["Title"] = "Shopping cart";
-    ViewData["SubTitle"] = "List";
+    ViewData["Title"] = "Carrito de compras";
+    ViewData["SubTitle"] = "Listado";
 }
 <h2 class="text-center mb-3">@ViewData["Title"] <small class="text-muted fs-5">@ViewData["SubTitle"]</small></h2>
 
 <div class="row small mb-3">
     <div class="col text-end">
-        Showing @Model.Items.Count items (@Model.TotalItems items)
+        Mostrando @Model.Items.Count artículos (@Model.TotalItems piezas)
     </div>
 </div>
 
@@ -21,9 +21,9 @@
             <thead class="text-center">
                 <tr>
                     <th width="1"></th>
-                    <th>Product</th>
-                    <th>Price</th>
-                    <th>Quantity</th>
+                    <th>Producto</th>
+                    <th>Precio</th>
+                    <th>Cantidad</th>
                     <th>Subtotal</th>
                     <th width="1"></th>
                 </tr>
@@ -42,15 +42,15 @@
                             <form asp-action="Actualizar" method="post" data-autoenviar>
                                 <input type="hidden" name="productId" value="@item.ProductId" />
                                 <input type="number" name="cantidad" value="@item.Quantity" min="1" max="99"
-                                       class="form-control form-control-sm" style="width: 5rem;" aria-label="Quantity" />
-                                <noscript><button type="submit" class="btn btn-sm btn-outline-secondary">Update</button></noscript>
+                                       class="form-control form-control-sm" style="width: 5rem;" aria-label="Cantidad" />
+                                <noscript><button type="submit" class="btn btn-sm btn-outline-secondary">Actualizar</button></noscript>
                             </form>
                         </td>
                         <td class="text-end">@item.Subtotal</td>
                         <td>
                             <form asp-action="Quitar" method="post">
                                 <input type="hidden" name="productId" value="@item.ProductId" />
-                                <button type="submit" class="btn btn-sm btn-outline-danger" title="Remove"><i class="bi bi-trash"></i></button>
+                                <button type="submit" class="btn btn-sm btn-outline-danger" title="Quitar"><i class="bi bi-trash"></i></button>
                             </form>
                         </td>
                     </tr>
@@ -67,16 +67,16 @@
     </div>
     <div class="d-flex justify-content-between">
         <form asp-action="Vaciar" method="post">
-            <button type="submit" class="btn btn-sm btn-outline-secondary">Empty cart</button>
+            <button type="submit" class="btn btn-sm btn-outline-secondary">Vaciar carrito</button>
         </form>
-        <a class="btn btn-sm btn-primary" asp-controller="Orders" asp-action="Checkout">Proceed to checkout</a>
+        <a class="btn btn-sm btn-primary" asp-controller="Orders" asp-action="Checkout">Confirmar compra</a>
     </div>
 }
 else
 {
     <div class="mt-5">
         <div class="alert alert-warning" role="alert">
-            Your cart is empty. <a asp-controller="Shopping" asp-action="Index">Explore products</a>.
+            Su carrito está vacío. <a asp-controller="Shopping" asp-action="Index">Explore los productos</a>.
         </div>
     </div>
 }

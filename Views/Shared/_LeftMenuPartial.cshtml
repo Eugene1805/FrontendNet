@@ -4,26 +4,26 @@
     {
         @if (User.IsInRole("BUYER") || User.IsInRole("Usuario"))
         {
-            <a class="nav-link" asp-controller="Shopping" asp-action="Index">Shop</a>
-            <a class="nav-link" asp-controller="ShoppingCart" asp-action="Index"><i class="bi-cart"></i> Cart
+            <a class="nav-link" asp-controller="Shopping" asp-action="Index">Tienda</a>
+            <a class="nav-link" asp-controller="ShoppingCart" asp-action="Index"><i class="bi-cart"></i> Carrito
                 @await Component.InvokeAsync("CarritoResumen")</a>
-            <a class="nav-link" asp-controller="Orders" asp-action="Index">My Orders</a>
+            <a class="nav-link" asp-controller="Orders" asp-action="Index">Mis pedidos</a>
         }
         else if (User.IsInRole("SELLER") || User.IsInRole("Vendedor"))
         {
-            <a class="nav-link" asp-controller="Products" asp-action="Index">Products</a>
-            <a class="nav-link" asp-controller="Orders" asp-action="Index">Orders</a>
+            <a class="nav-link" asp-controller="Products" asp-action="Index">Productos</a>
+            <a class="nav-link" asp-controller="Orders" asp-action="Index">Pedidos</a>
         }
         else if (User.IsInRole("ADMIN") || User.IsInRole("Administrador"))
         {
-            <a class="nav-link" asp-controller="Categories" asp-action="Index">Categories</a>
-            <a class="nav-link" asp-controller="Users" asp-action="Index">Users</a>
-            <a class="nav-link" asp-controller="Orders" asp-action="Index">Orders</a>
-            <a class="nav-link" asp-controller="AuditLog" asp-action="Index">Audit Log</a>
+            <a class="nav-link" asp-controller="Categories" asp-action="Index">Categorías</a>
+            <a class="nav-link" asp-controller="Users" asp-action="Index">Usuarios</a>
+            <a class="nav-link" asp-controller="Orders" asp-action="Index">Pedidos</a>
+            <a class="nav-link" asp-controller="AuditLog" asp-action="Index">Bitácora</a>
         }
     }
     else
     {
-        <a class="nav-link" asp-controller="Home" asp-action="Index">Home</a>
+        <a class="nav-link" asp-controller="Home" asp-action="Index">Inicio</a>
     }
 </div>

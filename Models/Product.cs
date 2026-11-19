@@ -7,18 +7,18 @@ public class Product
 {
     [Display(Name = "Id")]
     public int? ProductId { get; set; }
-    [Required(ErrorMessage = "The {0} field is required.")]
-    [Display(Name = "Title")]
+    [Required(ErrorMessage = "El campo {0} es obligatorio.")]
+    [Display(Name = "Título")]
     public required string Title { get; set; }
-    [Required(ErrorMessage = "The {0} field is required.")]
+    [Required(ErrorMessage = "El campo {0} es obligatorio.")]
     [DataType(DataType.MultilineText)]
-    [Display(Name = "Description")]
-    public string Description { get; set; } = "No description";
-    [Required(ErrorMessage = "The {0} field is required.")]
+    [Display(Name = "Descripción")]
+    public string Description { get; set; } = "Sin descripción";
+    [Required(ErrorMessage = "El campo {0} es obligatorio.")]
     [DataType(DataType.Currency)]
-    [RegularExpression(@"^\d+(\.\d{0,2})?$", ErrorMessage = "The field value must be a valid price.")]
+    [RegularExpression(@"^\d+(\.\d{0,2})?$", ErrorMessage = "El valor del campo debe ser un precio válido.")]
     [DisplayFormat(DataFormatString = "{0:C}", ApplyFormatInEditMode = false)]
-    [Display(Name = "Price")]
+    [Display(Name = "Precio")]
     public decimal Price
     { get; set; }
     // Se lee del API como "fileId"; JsonSerializerDefaults.Web es insensible a mayúsculas.

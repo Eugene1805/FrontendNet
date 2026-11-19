@@ -1,6 +1,6 @@
 @model List<FileRecord>
 @{
-    ViewData["Title"] = "Files";
+    ViewData["Title"] = "Archivos";
     ViewData["SubTitle"] = "Listado";
 }
 
@@ -17,7 +17,7 @@
         <a class="text-decoration-none" asp-action="Crear" title="Crear nuevo">Agregar nuevo</a>
     </div>
     <div class="col text-end">
-        Showing @Model.Count() de @ViewBag.Total items
+        Mostrando @Model.Count() de @ViewBag.Total archivos
     </div>
 </div>
 
@@ -30,7 +30,7 @@
                     <th>
                         @Html.DisplayNameFor(model => model.First().FileId)
                     </th>
-                    <th>Poster</th>
+                    <th>Portada</th>
                     <th>
                         @Html.DisplayNameFor(model => model.First().Name)
                     </th>
@@ -68,19 +68,19 @@
                             @(item.Size / 1024) KB
                         </td>
                         <td>
-                            @(item.StoredInDatabase ? "Database" : "Files")
+                            @(item.StoredInDatabase ? "Base de datos" : "Disco")
                         </td>
                         <td width="1">
                             <a class="text-decoration-none small text-uppercase" asp-action="Detalle"
-                               asp-route-id="@item.FileId">Details</a>
+                               asp-route-id="@item.FileId">Detalles</a>
                         </td>
                         <td width="1">
                             <a class="text-decoration-none small text-uppercase" asp-action="Editar"
-                               asp-route-id="@item.FileId">Edit</a>
+                               asp-route-id="@item.FileId">Editar</a>
                         </td>
                         <td width="1">
                             <a class="text-decoration-none small text-uppercase" asp-action="Eliminar"
-                               asp-route-id="@item.FileId">Delete</a>
+                               asp-route-id="@item.FileId">Eliminar</a>
                         </td>
                     </tr>
                 }
@@ -93,7 +93,7 @@ else
 {
     <div class="mt-5">
         <div class="alert alert-warning" role="alert">
-            No items were found. Please try again later.
+            No se encontraron archivos. Por favor, intente más tarde.
         </div>
     </div>
 }

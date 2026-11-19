@@ -1,7 +1,7 @@
 @model List<User>
 @{
-    ViewData["Title"] = "Users";
-    ViewData["SubTitle"] = "List";
+    ViewData["Title"] = "Usuarios";
+    ViewData["SubTitle"] = "Listado";
 }
 <nav aria-label="breadcrumb">
     <ol class="breadcrumb small">
@@ -11,10 +11,10 @@
 <h2 class="text-center mb-3">@ViewData["Title"] <small class="text-muted fs-5">@ViewData["SubTitle"]</small></h2>
 <div class="row small mb-3">
     <div class="col">
-        <a class="text-decoration-none" asp-action="Crear" title="Create new">Create new</a>
+        <a class="text-decoration-none" asp-action="Crear" title="Crear nuevo">Crear nuevo</a>
     </div>
     <div class="col text-end">
-        Showing @Model.Count() of @ViewBag.Total items
+        Mostrando @Model.Count() de @ViewBag.Total usuarios
     </div>
 </div>
 @if (Model.Count() > 0)
@@ -60,21 +60,21 @@
                             @Html.DisplayFor(modelItem => item.Role)
                         </td>
                         <td class="text-center">
-                            @if (item.Protected) { <i class="bi bi-shield-lock" title="User protegido"></i> }
+                            @if (item.Protected) { <i class="bi bi-shield-lock" title="Usuario protegido"></i> }
                         </td>
                         <td width="1">
                             <a class="text-decoration-none small text-uppercase" asp-action="Detalle"
-                               asp-route-id="@item.Email">Details</a>
+                               asp-route-id="@item.Email">Detalles</a>
                         </td>
                         <td width="1">
                             <a class="text-decoration-none small text-uppercase" asp-action="Editar"
-                               asp-route-email="@item.Email">Edit</a>
+                               asp-route-email="@item.Email">Editar</a>
                         </td>
                         <td width="1">
                             @if (!item.Protected)
                             {
                                 <a class="text-decoration-none small text-uppercase" asp-action="Eliminar"
-                                   asp-route-id="@item.Email">Delete</a>
+                                   asp-route-id="@item.Email">Eliminar</a>
                             }
                         </td>
                     </tr>
@@ -88,7 +88,7 @@ else
 {
     <div class="mt-5">
         <div class="alert alert-warning" role="alert">
-            No items were found. Please try again later.
+            No se encontraron usuarios. Por favor, intente más tarde.
         </div>
     </div>
 }

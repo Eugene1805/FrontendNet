@@ -1,7 +1,7 @@
 @model List<Category>
 @{
-    ViewData["Title"] = "Categories";
-    ViewData["SubTitle"] = "List";
+    ViewData["Title"] = "Categorías";
+    ViewData["SubTitle"] = "Listado";
 }
 
 <nav aria-label="breadcrumb">
@@ -14,10 +14,10 @@
 
 <div class="row small mb-3">
     <div class="col">
-        <a class="text-decoration-none" asp-action="Crear" title="Create new">Create new</a>
+        <a class="text-decoration-none" asp-action="Crear" title="Crear nueva">Crear nueva</a>
     </div>
     <div class="col text-end">
-        Showing @Model.Count() items
+        Mostrando @Model.Count() elementos
     </div>
 </div>
 
@@ -52,16 +52,16 @@
                             @Html.DisplayFor(modelItem => item.Name)
                         </td>
                         <td>
-                            @(item.Protected ? "No" : "Yes")
+                            @(item.Protected ? "Sí" : "No")
                         </td>
                         <td width="1">
-                            <a class="text-decoration-none small text-uppercase" asp-action="Detalle" asp-route-id="@item.CategoryId">Details</a>
+                            <a class="text-decoration-none small text-uppercase" asp-action="Detalle" asp-route-id="@item.CategoryId">Detalles</a>
                         </td>
                         <td width="1">
-                            <a class="text-decoration-none small text-uppercase" asp-action="Editar" asp-route-id="@item.CategoryId">Edit</a>
+                            <a class="text-decoration-none small text-uppercase" asp-action="Editar" asp-route-id="@item.CategoryId">Editar</a>
                         </td>
                         <td width="1">
-                            <a class="text-decoration-none small text-uppercase" asp-action="Eliminar" asp-route-id="@item.CategoryId">Delete</a>
+                            <a class="text-decoration-none small text-uppercase" asp-action="Eliminar" asp-route-id="@item.CategoryId">Eliminar</a>
                         </td>
                     </tr>
                 }
@@ -73,7 +73,7 @@ else
 {
     <div class="mt-5">
         <div class="alert alert-warning" role="alert">
-            No items were found. Please try again later.
+            No se encontraron elementos. Por favor, intente más tarde.
         </div>
     </div>
 }

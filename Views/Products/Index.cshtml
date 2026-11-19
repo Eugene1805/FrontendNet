@@ -1,7 +1,7 @@
 @model List<Product>
 @{
-    ViewData["Title"] = "Products";
-    ViewData["SubTitle"] = "List";
+    ViewData["Title"] = "Productos";
+    ViewData["SubTitle"] = "Listado";
 }
 <nav aria-label="breadcrumb">
     <ol class="breadcrumb small">
@@ -14,8 +14,8 @@
         <form asp-action="Index" method="get">
             <div class="input-group input-group-sm mb-3">
                 <input name="s" id="s" value="@ViewBag.search" type="search" class="form-control"
-                       placeholder="Search by title">
-                <button class="btn btn-primary" type="submit" title="Search"><i class="bi bi-search"></i></button>
+                       placeholder="Buscar por título">
+                <button class="btn btn-primary" type="submit" title="Buscar"><i class="bi bi-search"></i></button>
             </div>
         </form>
     </div>
@@ -24,11 +24,11 @@
     <div class="col">
         @if (ViewBag.SoloAdmin == true)
         {
-            <a class="text-decoration-none" asp-action="Crear" title="Create new">Create new</a>
+            <a class="text-decoration-none" asp-action="Crear" title="Crear nuevo">Crear nuevo</a>
         }
     </div>
     <div class="col text-end">
-        Showing @Model.Count() of @ViewBag.Total items
+        Mostrando @Model.Count() de @ViewBag.Total productos
     </div>
 </div>
 @if (Model.Count() > 0)
@@ -83,21 +83,21 @@
                         </td>
                         <td width="1">
                             <a class="text-decoration-none small text-uppercase" asp-action="Detalle"
-                               asp-route-id="@item.ProductId">Details</a>
+                               asp-route-id="@item.ProductId">Detalles</a>
                         </td>
                         @if (ViewBag.SoloAdmin == true)
                         {
                             <td width="1">
                                 <a class="text-decoration-none small text-uppercase" asp-action="Categorias"
-                                   asp-route-id="@item.ProductId">Categories</a>
+                                   asp-route-id="@item.ProductId">Categorías</a>
                             </td>
                             <td width="1">
                                 <a class="text-decoration-none small text-uppercase" asp-action="Editar"
-                                   asp-route-id="@item.ProductId">Edit</a>
+                                   asp-route-id="@item.ProductId">Editar</a>
                             </td>
                             <td width="1">
                                 <a class="text-decoration-none small text-uppercase" asp-action="Eliminar"
-                                   asp-route-id="@item.ProductId">Delete</a>
+                                   asp-route-id="@item.ProductId">Eliminar</a>
                             </td>
                         }
                     </tr>
@@ -111,7 +111,7 @@ else
 {
     <div class="mt-5">
         <div class="alert alert-warning" role="alert">
-            No items were found. Please try again later.
+            No se encontraron productos. Por favor, intente más tarde.
         </div>
     </div>
 }

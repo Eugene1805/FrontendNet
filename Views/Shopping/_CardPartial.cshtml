@@ -21,12 +21,12 @@
         </p>
     </div>
     <div class="card-footer d-flex gap-2">
-        <a class="btn btn-outline-secondary btn-sm" asp-action="Detalle" asp-route-id="@Model.ProductId">View</a>
+        <a class="btn btn-outline-secondary btn-sm" asp-action="Detalle" asp-route-id="@Model.ProductId">Ver</a>
         <form asp-controller="ShoppingCart" asp-action="Agregar" method="post">
             <input type="hidden" name="productId" value="@Model.ProductId" />
             <input type="hidden" name="cantidad" value="1" />
             <input type="hidden" name="returnUrl" value="@(Context.Request.Path + Context.Request.QueryString)" />
-            <button type="submit" class="btn btn-primary btn-sm"><i class="bi bi-cart-plus"></i> Add al carrito</button>
+            <button type="submit" class="btn btn-primary btn-sm"><i class="bi bi-cart-plus"></i> Agregar al carrito</button>
         </form>
     </div>
 </div>

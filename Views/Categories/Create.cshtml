@@ -1,7 +1,7 @@
 @model Category
 @{
-    ViewData["Title"] = "Categories";
-    ViewData["SubTitle"] = "Create";
+    ViewData["Title"] = "Categorías";
+    ViewData["SubTitle"] = "Crear";
 }
 
 @section Scripts {
@@ -10,8 +10,8 @@
 
 <nav aria-label="breadcrumb">
     <ol class="breadcrumb small">
-        <li class="breadcrumb-item"><a class="text-decoration-none" title="Back to list"
-                asp-action="Index">List</a></li>
+        <li class="breadcrumb-item"><a class="text-decoration-none" title="Volver al listado"
+                asp-action="Index">Listado</a></li>
         <li class="breadcrumb-item active" aria-current="page">@ViewData["SubTitle"]</li>
     </ol>
 </nav>
@@ -31,7 +31,7 @@
     </div>
 
     <div class="text-center mt-3">
-        <button id="btnEnviar" type="submit" class="btn btn-sm btn-primary">Save</button>
-        <a class="btn btn-sm btn-outline-secondary" asp-action="Index" title="Cancel">Cancel</a>
+        <button id="btnEnviar" type="submit" class="btn btn-sm btn-primary">Guardar</button>
+        <a class="btn btn-sm btn-outline-secondary" asp-action="Index" title="Cancelar">Cancelar</a>
     </div>
 </form>

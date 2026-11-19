@@ -17,26 +17,26 @@ public class ProfileSession
 
 public class ProfileName
 {
-    [Required(ErrorMessage = "The {0} field is required.")]
-    [StringLength(100, ErrorMessage = "The {0} field admits a maximum of {1} characters.")]
-    [Display(Name = "Name")]
+    [Required(ErrorMessage = "El campo {0} es obligatorio.")]
+    [StringLength(100, ErrorMessage = "El campo {0} admite un máximo de {1} caracteres.")]
+    [Display(Name = "Nombre")]
     public string Name { get; set; } = "";
 }
 
 public class ChangePassword
 {
-    [Required(ErrorMessage = "The {0} field is required.")]
+    [Required(ErrorMessage = "El campo {0} es obligatorio.")]
     [DataType(DataType.Password)]
-    [Display(Name = "Current password")]
+    [Display(Name = "Contraseña actual")]
     public string CurrentPassword { get; set; } = "";
-    [Required(ErrorMessage = "The {0} field is required.")]
-    [MinLength(6, ErrorMessage = "The {0} field must be at least {1} characters.")]
+    [Required(ErrorMessage = "El campo {0} es obligatorio.")]
+    [MinLength(6, ErrorMessage = "El campo {0} debe tener un mínimo de {1} caracteres.")]
     [DataType(DataType.Password)]
-    [Display(Name = "New password")]
+    [Display(Name = "Contraseña nueva")]
     public string NewPassword { get; set; } = "";
-    [Required(ErrorMessage = "The {0} field is required.")]
-    [Compare(nameof(NewPassword), ErrorMessage = "Confirmation does not match new password.")]
+    [Required(ErrorMessage = "El campo {0} es obligatorio.")]
+    [Compare(nameof(NewPassword), ErrorMessage = "La confirmación no coincide con la contraseña nueva.")]
     [DataType(DataType.Password)]
-    [Display(Name = "Confirm new password")]
+    [Display(Name = "Confirmar contraseña nueva")]
     public string Confirmation { get; set; } = "";
 }

@@ -11,7 +11,7 @@ public class AuditEntry
     public string? ElementId { get; set; }
     [Display(Name = "IP")]
     public string? IP { get; set; }
-    [Display(Name = "BUYER")]
+    [Display(Name = "Usuario")]
     public string? User { get; set; }
     [Display(Name = "Fecha")]
     public DateTime? Date { get; set; }

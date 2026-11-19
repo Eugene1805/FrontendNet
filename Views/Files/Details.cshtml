@@ -1,13 +1,13 @@
 @model FileRecord
 @{
-    ViewData["Title"] = "Files";
-    ViewData["SubTitle"] = "Details";
+    ViewData["Title"] = "Archivos";
+    ViewData["SubTitle"] = "Detalles";
 }
 
 <nav aria-label="breadcrumb">
     <ol class="breadcrumb small">
-        <li class="breadcrumb-item"><a class="text-decoration-none" title="Back to list"
-                asp-action="Index">List</a></li>
+        <li class="breadcrumb-item"><a class="text-decoration-none" title="Volver al listado"
+                asp-action="Index">Listado</a></li>
         <li class="breadcrumb-item active" aria-current="page">@ViewData["SubTitle"]</li>
     </ol>
 </nav>
@@ -16,5 +16,5 @@
 
 <partial name="_DetailsPartial" model="Model" />
 <div class="text-center mt-3">
-    <a class="btn btn-sm btn-outline-secondary" asp-action="Index" title="Cancel">Cancel</a>
+    <a class="btn btn-sm btn-outline-secondary" asp-action="Index" title="Volver">Volver</a>
 </div>

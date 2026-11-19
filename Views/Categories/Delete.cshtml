@@ -1,13 +1,13 @@
 @model Category
 @{
-    ViewData["Title"] = "Categories";
-    ViewData["SubTitle"] = "Delete";
+    ViewData["Title"] = "Categorías";
+    ViewData["SubTitle"] = "Eliminar";
 }
 
 <nav aria-label="breadcrumb">
     <ol class="breadcrumb small">
-        <li class="breadcrumb-item"><a class="text-decoration-none" title="Back to list"
-                asp-action="Index">List</a></li>
+        <li class="breadcrumb-item"><a class="text-decoration-none" title="Volver al listado"
+                asp-action="Index">Listado</a></li>
         <li class="breadcrumb-item active" aria-current="page">@ViewData["SubTitle"]</li>
     </ol>
 </nav>
@@ -16,15 +16,15 @@
 
 @if (!Model.Protected)
 {
-    <p class="text-danger">Are you sure you want to delete this item?</p>
-    <p class="text-warning-emphasis small">If this category is assigned to products, it will be unassigned from all of them (the products are not deleted).</p>
+    <p class="text-danger">¿Está seguro que desea eliminar este elemento?</p>
+    <p class="text-warning-emphasis small">Si la categoría está asignada a productos, se quitará de todos ellos (los productos no se eliminan).</p>
     <p class="text-danger">@ViewData["ErrorMessage"]</p>
 
     <partial name="_DetailsPartial" />
     <form asp-action="Eliminar">
         <div class="text-center mt-3">
-            <button id="btnEnviar" type="submit" class="btn btn-sm btn-primary">Delete</button>
-            <a class="btn btn-sm btn-outline-secondary" asp-action="Index" title="Cancel">Cancel</a>
+            <button id="btnEnviar" type="submit" class="btn btn-sm btn-primary">Eliminar</button>
+            <a class="btn btn-sm btn-outline-secondary" asp-action="Index" title="Cancelar">Cancelar</a>
         </div>
     </form>
 }
@@ -32,11 +32,11 @@ else
 {
     <div class="mt-5">
         <div class="alert alert-warning" role="alert">
-            Category "<strong>@Model.Name</strong>" is protected and cannot be deleted.
+            La categoría "<strong>@Model.Name</strong>" está protegida y no puede eliminarse.
         </div>
     </div>
 
     <div class="text-center mt-3">
-        <a class="btn btn-sm btn-outline-secondary" asp-action="Index" title="Cancel">Cancel</a>
+        <a class="btn btn-sm btn-outline-secondary" asp-action="Index" title="Cancelar">Cancelar</a>
     </div>
 }

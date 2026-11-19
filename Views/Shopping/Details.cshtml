@@ -5,8 +5,8 @@
 
 <nav aria-label="breadcrumb">
     <ol class="breadcrumb small">
-        <li class="breadcrumb-item"><a class="text-decoration-none" asp-action="Index">Shop</a></li>
-        <li class="breadcrumb-item active" aria-current="page">Details</li>
+        <li class="breadcrumb-item"><a class="text-decoration-none" asp-action="Index">Tienda</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Detalles</li>
     </ol>
 </nav>
 
@@ -30,14 +30,14 @@
                 <form asp-controller="ShoppingCart" asp-action="Agregar" method="post" class="row g-2 align-items-center">
                     <input type="hidden" name="productId" value="@Model.ProductId" />
                     <div class="col-auto">
-                        <label for="cantidad" class="col-form-label small">Quantity</label>
+                        <label for="cantidad" class="col-form-label small">Cantidad</label>
                     </div>
                     <div class="col-auto">
                         <input type="number" id="cantidad" name="cantidad" value="1" min="1" max="99"
                                class="form-control form-control-sm" style="width: 5rem;" />
                     </div>
                     <div class="col-auto">
-                        <button type="submit" class="btn btn-primary btn-sm"><i class="bi bi-cart-plus"></i> Add to cart</button>
+                        <button type="submit" class="btn btn-primary btn-sm"><i class="bi bi-cart-plus"></i> Agregar al carrito</button>
                     </div>
                 </form>
             </div>
