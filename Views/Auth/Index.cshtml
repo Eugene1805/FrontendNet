@@ -5,7 +5,11 @@
     var siteKey = Configuration["Cloudflare:TurnstileSiteKey"];
 }
 
-<form asp-action="Index">
+<form asp-action="Index" method="post">
+    @if (ViewData["ReturnUrl"] is string returnUrl && !string.IsNullOrWhiteSpace(returnUrl))
+    {
+        <input type="hidden" name="returnUrl" value="@returnUrl" />
+    }
     <div class="card mx-auto" style="max-width: 500px;">
         <div class="card-body">
             <h1 class="h3 text-center">Welcome to Mercado Libre</h1>

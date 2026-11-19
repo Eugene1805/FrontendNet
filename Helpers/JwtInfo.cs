@@ -7,7 +7,7 @@ namespace FrontendNet.Helpers;
 /// Read claims informativos (exp, iss, aud) de un JWT SIN validar la firma.
 /// Solo sirve para mostrar/alinear tiempos; la autoridad es el API.
 /// </summary>
-public record JwtInfo(DateTimeOffset? Expira, string? Emisor, string? Audiencia)
+public record JwtInfo(DateTimeOffset? Expira, string? Emisor, string? Audiencia, string? SessionId = null)
 {
     public static JwtInfo? Read(string? jwt)
     {
@@ -23,7 +23,7 @@ public record JwtInfo(DateTimeOffset? Expira, string? Emisor, string? Audiencia)
             DateTimeOffset? exp = raiz.TryGetProperty("exp", out var e) && e.TryGetInt64(out var segs)
                 ? DateTimeOffset.FromUnixTimeSeconds(segs) : null;
             string? Texto(string nombre) => raiz.TryGetProperty(nombre, out var v) && v.ValueKind == JsonValueKind.String ? v.GetString() : null;
-            return new JwtInfo(exp, Texto("iss"), Texto("aud"));
+            return new JwtInfo(exp, Texto("iss"), Texto("aud"), Texto("sid"));
         }
         catch (Exception ex) when (ex is FormatException or JsonException)
         {
