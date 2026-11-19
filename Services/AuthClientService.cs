@@ -79,23 +79,49 @@ public class AuthClientService(
     }
 
     /// <summary>
-    /// Updates user claims (e.g., profile name edit) while preserving the encrypted session tokens and absolute deadline.
+    /// Updates user claims (e.g., profile name edit) while preserving the latest session tokens
+    /// (including any token rotated earlier in the same HTTP request) and absolute deadline.
     /// </summary>
     public async Task SignInAsync(IEnumerable<Claim> claims)
     {
         var httpContext = httpContextAccessor.HttpContext
             ?? throw new InvalidOperationException("No hay un HttpContext activo para iniciar sesión.");
-        var authResult = await httpContext.AuthenticateAsync(CookieAuthenticationDefaults.AuthenticationScheme);
-        var props = authResult.Properties ?? new AuthenticationProperties();
+        var snapshot = await GetSessionTokensAsync();
         var now = _timeProvider.GetUtcNow();
-        var createdUtc = ParseCreatedUtc(props) ?? now;
+        var createdUtc = snapshot?.SessionCreatedUtc ?? now;
+
+        var props = new AuthenticationProperties
+        {
+            IssuedUtc = now,
+            ExpiresUtc = ComputeCookieExpiry(now, createdUtc)
+        };
         props.Items[SessionCreatedItemKey] = createdUtc.ToString("O", CultureInfo.InvariantCulture);
-        props.IssuedUtc = now;
-        props.ExpiresUtc = ComputeCookieExpiry(now, createdUtc);
+
+        var authTokens = new List<AuthenticationToken>();
+        if (!string.IsNullOrWhiteSpace(snapshot?.AccessToken))
+        {
+            authTokens.Add(new AuthenticationToken { Name = AccessTokenName, Value = snapshot.AccessToken });
+        }
+        if (!string.IsNullOrWhiteSpace(snapshot?.RefreshToken))
+        {
+            authTokens.Add(new AuthenticationToken { Name = RefreshTokenName, Value = snapshot.RefreshToken });
+        }
+        if (snapshot?.ExpiresAtUtc is { } exp)
+        {
+            authTokens.Add(new AuthenticationToken { Name = ExpiresAtTokenName, Value = exp.ToString("O", CultureInfo.InvariantCulture) });
+        }
+        if (authTokens.Count > 0)
+        {
+            props.StoreTokens(authTokens);
+        }
 
         var principal = new ClaimsPrincipal(new ClaimsIdentity(claims.ToList(), CookieAuthenticationDefaults.AuthenticationScheme));
         await httpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, principal, props);
         httpContext.User = principal;
+        if (snapshot != null)
+        {
+            httpContext.Items[HttpContextTokensItemKey] = snapshot with { SessionCreatedUtc = createdUtc };
+        }
     }
 
     public async Task<SessionTokens?> GetSessionTokensAsync(CancellationToken cancellationToken = default)
@@ -228,10 +254,7 @@ public class AuthClientService(
             claims.Add(new Claim(ClaimTypes.Role, "SELLER"));
             claims.Add(new Claim(ClaimTypes.Role, "Vendedor"));
         }
-        else if (!string.IsNullOrEmpty(rawRole))
-        {
-            claims.Add(new Claim(ClaimTypes.Role, rawRole));
-        }
+        // Perfiles no reconocidos se ignoran explícitamente para no emitir claims de rol arbitrarios.
 
         return claims;
     }

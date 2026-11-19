@@ -78,9 +78,9 @@ public class AuthController(AuthClientService auth, ProfileClientService profile
         {
             await profile.RevocaSesionAsync();
         }
-        catch (Exception ex) when (IsApiError(ex))
+        catch (Exception)
         {
-            // Si el API no responde o el token ya expiró, se cierra la sesión local de todos modos.
+            // Si el API no responde o la sesión ya expiró/es inválida, nunca falla el cierre local.
         }
 
         await auth.SignOutLocalAsync();

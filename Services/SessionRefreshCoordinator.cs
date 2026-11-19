@@ -1,4 +1,5 @@
 using System.Collections.Concurrent;
+using System.Net;
 using System.Security.Cryptography;
 using System.Text;
 using FrontendNet.Models;
@@ -30,11 +31,13 @@ public interface ISessionTokenManager
 /// <summary>
 /// Per-session single-flight coordinator for single-use refresh tokens.
 /// Ensures concurrent requests sharing the same session trigger only ONE
-/// POST /api/auth/refresh call; waiters reuse the rotated token pair (or failure).
+/// POST /api/auth/refresh call; waiters reuse the rotated token pair (or definitive auth failure).
 /// </summary>
 public sealed class SessionRefreshCoordinator
 {
-    private static readonly TimeSpan ResultReuseWindow = TimeSpan.FromMinutes(2);
+    // Short 20s window: enough to coalesce concurrent requests from the same HTTP burst
+    // without retaining rotated tokens in memory longer than necessary.
+    public static readonly TimeSpan ResultReuseWindow = TimeSpan.FromSeconds(20);
     private static readonly TimeSpan StaleEntryTtl = TimeSpan.FromMinutes(35);
 
     private sealed class SessionGate
@@ -58,6 +61,20 @@ public sealed class SessionRefreshCoordinator
             ? $"sid:{sessionId}"
             : $"rt:{HashToken(refreshToken)}";
 
+    /// <summary>
+    /// Returns true for transient failures (network outage, timeouts, 5xx, 429) where
+    /// the refresh token was not definitively rejected/consumed by the auth service.
+    /// </summary>
+    public static bool IsTransientRefreshFailure(Exception ex) => ex switch
+    {
+        ApiException { StatusCode: null } => true,
+        ApiException { StatusCode: HttpStatusCode.TooManyRequests } => true,
+        ApiException { StatusCode: >= HttpStatusCode.InternalServerError } => true,
+        HttpRequestException { StatusCode: null or >= HttpStatusCode.InternalServerError or HttpStatusCode.TooManyRequests } => true,
+        TaskCanceledException => true,
+        _ => false
+    };
+
     public async Task<AuthUser?> RefreshSingleFlightAsync(
         string sessionKey,
         string observedRefreshToken,
@@ -72,7 +89,7 @@ public sealed class SessionRefreshCoordinator
         try
         {
             var now = _timeProvider.GetUtcNow();
-            // Another concurrent request already rotated this exact refresh token.
+            // Another concurrent request already rotated (or definitively failed on) this exact refresh token.
             if (gate.ConsumedRefreshTokenHash == observedHash &&
                 now - gate.LastUpdatedUtc <= ResultReuseWindow)
             {
@@ -84,8 +101,14 @@ public sealed class SessionRefreshCoordinator
             {
                 refreshed = await refreshAction(cancellationToken);
             }
+            catch (Exception ex) when (IsTransientRefreshFailure(ex))
+            {
+                // Transient network/5xx error: do NOT mark the refresh token as consumed.
+                throw;
+            }
             catch
             {
+                // Definitive auth rejection (e.g., 401 / REFRESH_REUSED / 400): record consumed failure.
                 gate.ConsumedRefreshTokenHash = observedHash;
                 gate.LastRefreshedUser = null;
                 gate.LastUpdatedUtc = _timeProvider.GetUtcNow();

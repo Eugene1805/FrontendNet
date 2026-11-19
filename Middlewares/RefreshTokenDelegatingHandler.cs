@@ -28,13 +28,18 @@ public class RefreshTokenDelegatingHandler(
         // 1) Proactive refresh when < 60s remain on the access token.
         if (tokens != null && NeedsProactiveRefresh(tokens) && !string.IsNullOrWhiteSpace(tokens.RefreshToken))
         {
-            var refreshed = await TryRefreshSessionAsync(tokens, cancellationToken);
-            if (refreshed == null)
+            var refreshOutcome = await TryRefreshSessionAsync(tokens, cancellationToken);
+            if (refreshOutcome.TransientError != null)
+            {
+                // Transient network/5xx error: preserve the local session and propagate the error.
+                throw refreshOutcome.TransientError;
+            }
+            if (refreshOutcome.Refreshed == null)
             {
                 await sessionTokens.SignOutLocalAsync(cancellationToken);
                 throw ApiException.Create(HttpStatusCode.Unauthorized, "Sesión inválida o expirada.");
             }
-            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", refreshed.Jwt);
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", refreshOutcome.Refreshed.Jwt);
             tokens = await sessionTokens.GetSessionTokensAsync(cancellationToken) ?? tokens;
             refreshedProactively = true;
         }
@@ -61,16 +66,22 @@ public class RefreshTokenDelegatingHandler(
             var currentTokens = await sessionTokens.GetSessionTokensAsync(cancellationToken) ?? tokens;
             if (!refreshedProactively && currentTokens != null && !string.IsNullOrWhiteSpace(currentTokens.RefreshToken))
             {
-                var refreshed = await TryRefreshSessionAsync(currentTokens, cancellationToken);
-                if (refreshed != null)
+                var refreshOutcome = await TryRefreshSessionAsync(currentTokens, cancellationToken);
+                if (refreshOutcome.TransientError != null)
+                {
+                    // Transient network/5xx error during refresh: do NOT sign out the user.
+                    response.Dispose();
+                    throw refreshOutcome.TransientError;
+                }
+                if (refreshOutcome.Refreshed != null)
                 {
                     response.Dispose();
-                    using var retryRequest = CloneRequest(request, bufferedBody, refreshed.Jwt);
+                    using var retryRequest = CloneRequest(request, bufferedBody, refreshOutcome.Refreshed.Jwt);
                     response = await SendCoreAsync(retryRequest, cancellationToken);
                 }
             }
 
-            // Still 401 (refresh failed, no refresh token, or retry also returned 401) -> sign out locally.
+            // Still 401 (definitive auth failure, no refresh token, or retry also returned 401) -> sign out locally.
             if (response.StatusCode == HttpStatusCode.Unauthorized)
             {
                 await sessionTokens.SignOutLocalAsync(cancellationToken);
@@ -94,9 +105,11 @@ public class RefreshTokenDelegatingHandler(
         return exp - _timeProvider.GetUtcNow() < ProactiveRefreshThreshold;
     }
 
-    private async Task<AuthUser?> TryRefreshSessionAsync(SessionTokens tokens, CancellationToken cancellationToken)
+    private readonly record struct RefreshOutcome(AuthUser? Refreshed, Exception? TransientError);
+
+    private async Task<RefreshOutcome> TryRefreshSessionAsync(SessionTokens tokens, CancellationToken cancellationToken)
     {
-        if (string.IsNullOrWhiteSpace(tokens.RefreshToken)) return null;
+        if (string.IsNullOrWhiteSpace(tokens.RefreshToken)) return new RefreshOutcome(null, null);
 
         var sessionKey = SessionRefreshCoordinator.BuildSessionKey(tokens.SessionId, tokens.RefreshToken);
         try
@@ -123,15 +136,20 @@ public class RefreshTokenDelegatingHandler(
                     await sessionTokens.UpdateSessionTokensAsync(refreshed, cancellationToken);
                 }
             }
-            return refreshed;
+            return new RefreshOutcome(refreshed, null);
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
             throw;
         }
+        catch (Exception ex) when (SessionRefreshCoordinator.IsTransientRefreshFailure(ex))
+        {
+            var transient = ex is ApiException ? ex : new ApiException(null, null, null, ex);
+            return new RefreshOutcome(null, transient);
+        }
         catch
         {
-            return null;
+            return new RefreshOutcome(null, null);
         }
     }
 
