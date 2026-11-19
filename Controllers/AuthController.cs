@@ -1,25 +1,32 @@
 using System.Security.Claims;
 using FrontendNet.Models;
 using FrontendNet.Services;
-using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace FrontendNet;
-public class AuthController(AuthClientService auth, ProfileClientService profile, IConfiguration configuration, CloudflareTurnstileService turnstile) : AppController
+
+public class AuthController(AuthClientService auth, ProfileClientService profile, CloudflareTurnstileService turnstile) : AppController
 {
     [AllowAnonymous]
-    public IActionResult Index()
+    public IActionResult Index(string? returnUrl = null)
     {
+        ViewData["ReturnUrl"] = !string.IsNullOrWhiteSpace(returnUrl) && Url.IsLocalUrl(returnUrl)
+            ? returnUrl
+            : null;
         return View("Index");
     }
 
     [HttpPost]
     [AllowAnonymous]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> IndexAsync(Login model)
+    public async Task<IActionResult> IndexAsync(Login model, string? returnUrl = null)
     {
+        var safeReturnUrl = !string.IsNullOrWhiteSpace(returnUrl) && Url.IsLocalUrl(returnUrl)
+            ? returnUrl
+            : null;
+        ViewData["ReturnUrl"] = safeReturnUrl;
+
         if (ModelState.IsValid)
         {
             // SEC-03: Verificación de bot / protección contra fuerza bruta con Cloudflare Turnstile
@@ -34,21 +41,22 @@ public class AuthController(AuthClientService auth, ProfileClientService profile
             try
             {
                 AuthUser token = await auth.GetTokenAsync(model.Email, model.Password);
-                // SEC-02: Normalización de claims para congruencia RBAC entre API y Vistas Razor
+                await auth.SignInAsync(token);
+
+                if (safeReturnUrl != null)
+                {
+                    return LocalRedirect(safeReturnUrl);
+                }
+
                 var claims = AuthClientService.NormalizaClaims(token);
-                await auth.SignInAsync(claims);
                 if (claims.Any(c => c.Type == ClaimTypes.Role && (c.Value == "ADMIN" || c.Value == "Administrador")))
                 {
                     return RedirectToAction("Index", "Products");
                 }
-                else
-                {
-                    return RedirectToAction("Index", "Home");
-                }
+                return RedirectToAction("Index", "Home");
             }
             catch (Exception ex) when (IsApiError(ex))
             {
-                // 401 = credenciales inválidas (no se redirige a Salir). 429 = rate limiting del API.
                 if ((ex as HttpRequestException)?.StatusCode == System.Net.HttpStatusCode.Unauthorized)
                     ModelState.AddModelError(string.Empty, "Credenciales inválidas. Inténtelo nuevamente.");
                 else
@@ -58,30 +66,24 @@ public class AuthController(AuthClientService auth, ProfileClientService profile
         return View("Index");
     }
 
-    // SEC-01: Logout seguro vía POST con Anti-Forgery Token
+    // SEC-01: Logout seguro exclusivamente vía POST con Anti-Forgery Token.
+    // Revoca la sesión en Redis (POST /api/auth/logout) y elimina la cookie local .frontendnet.
     [HttpPost]
     [Authorize]
     [ValidateAntiForgeryToken]
     [ActionName("Salir")]
     public async Task<IActionResult> SignOutAsync()
     {
-        // DD-08: si el API ya soporta revocación, se invalida el JWT antes de borrar la cookie.
-        if (configuration.GetValue<bool>("Features:LogoutApi"))
+        try
         {
-            try { await profile.RevocaSesionAsync(); }
-            catch (Exception ex) when (IsApiError(ex)) { /* se cierra la sesión local de todos modos */ }
+            await profile.RevocaSesionAsync();
         }
-        HttpContext.Session.Clear();
-        await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+        catch (Exception)
+        {
+            // Si el API no responde o la sesión ya expiró/es inválida, nunca falla el cierre local.
+        }
+
+        await auth.SignOutLocalAsync();
         return RedirectToAction("Index", "Auth");
     }
-
-    // Redirección segura para intentos GET accidentales (evita error 405 y neutraliza Logout CSRF)
-    [HttpGet]
-    [ActionName("Salir")]
-    public IActionResult SignOutGet()
-    {
-        return RedirectToAction("Index", "Home");
-    }
-
 }

@@ -17,11 +17,28 @@ public abstract class AppController : Controller
 
     private static HttpStatusCode? Estado(Exception ex) => (ex as HttpRequestException)?.StatusCode;
 
+    /// <summary>
+    /// Redirige a /Auth preservando un returnUrl local válido (prevención de Open Redirect).
+    /// </summary>
+    protected IActionResult RedirectToLoginWithReturnUrl()
+    {
+        string? returnUrl = null;
+        if (HttpMethods.IsGet(Request.Method))
+        {
+            var candidate = Request.Path + Request.QueryString;
+            if (!string.IsNullOrWhiteSpace(candidate) && Url.IsLocalUrl(candidate))
+            {
+                returnUrl = candidate;
+            }
+        }
+        return RedirectToAction("Index", "Auth", returnUrl != null ? new { returnUrl } : null);
+    }
+
     // En un POST, un 403 es una regla de negocio con mensaje (p. ej. usuario protegido): se muestra el mensaje.
     // En un GET, un 403 significa que el rol no puede ver el recurso: AccessDenied.
     private IActionResult? RedirectForError(Exception ex, bool mostrarMensaje403 = false) => Estado(ex) switch
     {
-        HttpStatusCode.Unauthorized => RedirectToAction("Salir", "Auth"),
+        HttpStatusCode.Unauthorized => RedirectToLoginWithReturnUrl(),
         HttpStatusCode.Forbidden when !mostrarMensaje403 => RedirectToAction("AccessDenied", "Home"),
         HttpStatusCode.NotFound => NotFound(),
         _ => null

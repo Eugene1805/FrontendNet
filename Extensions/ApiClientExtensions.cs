@@ -5,8 +5,8 @@ namespace FrontendNet.Extensions;
 public static class ApiClientExtensions
 {
     /// <summary>
-    /// Registra un cliente tipado del Web API que envía el JWT de la sesión
-    /// y renueva la cookie cuando el API responde con Set-Authorization.
+    /// Registra un cliente tipado del Web API que envía el access token RS256 de la sesión
+    /// y lo renueva mediante POST /api/auth/refresh con bloqueo single-flight por sesión.
     /// </summary>
     public static IHttpClientBuilder AddApiClient<TClient>(this IServiceCollection services, string urlWebApi)
         where TClient : class

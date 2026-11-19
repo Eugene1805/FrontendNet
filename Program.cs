@@ -2,6 +2,7 @@ using FrontendNet.Extensions;
 using FrontendNet.Filters;
 using FrontendNet.Middlewares;
 using FrontendNet.Services;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Mvc;
 
@@ -43,6 +44,8 @@ builder.Services.AddSession(options =>
 var urlWebApi = builder.Configuration["UrlWebAPI"]
     ?? throw new InvalidOperationException("Falta la configuración 'UrlWebAPI' (URL del Web API) en appsettings.json.");
 builder.Services.AddHttpContextAccessor();
+builder.Services.AddSingleton(TimeProvider.System);
+builder.Services.AddSingleton<SessionRefreshCoordinator>();
 builder.Services.AddTransient<BearerTokenDelegatingHandler>();
 builder.Services.AddTransient<RefreshTokenDelegatingHandler>();
 builder.Services.AddHttpClient<CloudflareTurnstileService>();
@@ -57,8 +60,9 @@ builder.Services.Configure<ForwardedHeadersOptions>(options =>
     options.KnownProxies.Clear();
 });
 
-// El login es el único cliente que no envía el token
+// El login y /api/auth/refresh no envían el access token Bearer
 builder.Services.AddHttpClient<AuthClientService>(client => client.BaseAddress = new Uri(urlWebApi));
+builder.Services.AddScoped<ISessionTokenManager>(sp => sp.GetRequiredService<AuthClientService>());
 builder.Services.AddApiClient<CategoryClientService>(urlWebApi);
 builder.Services.AddApiClient<UsersClientService>(urlWebApi);
 builder.Services.AddApiClient<RolesClientService>(urlWebApi);
@@ -82,7 +86,8 @@ else
     builder.Services.AddApiClient<IOrdersService, OrdersClientService>(urlWebApi);
 }
 
-// Soporte para Cookie Auth
+// Soporte para Cookie Auth alineado con la sesión real en Redis (inactividad 30 min, límite absoluto 8 h).
+// No se alinea con el exp del access token (5 min) porque dicho token se rota transparentemente vía /api/auth/refresh.
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
     .AddCookie(options =>
     {
@@ -92,10 +97,31 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
         options.Cookie.SameSite = SameSiteMode.Lax;
         options.AccessDeniedPath = "/Home/AccessDenied";
         options.LoginPath = "/Auth";
-        // DD-07: la expiración de la cookie la fija el 'exp' del JWT (AuthClientService.SignInAsync),
-        // por eso no hay expiración deslizante que pueda desalinearla.
-        options.SlidingExpiration = false;
-        options.ExpireTimeSpan = TimeSpan.FromMinutes(20);
+        options.ReturnUrlParameter = "returnUrl";
+        options.SlidingExpiration = true;
+        options.ExpireTimeSpan = AuthClientService.IdleSessionLifetime;
+        options.Events.OnValidatePrincipal = async context =>
+        {
+            var createdUtc = AuthClientService.ParseCreatedUtc(context.Properties);
+            if (createdUtc is { } created)
+            {
+                var now = TimeProvider.System.GetUtcNow();
+                if (now - created >= AuthClientService.AbsoluteSessionLifetime)
+                {
+                    context.RejectPrincipal();
+                    await context.HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+                }
+                else
+                {
+                    var absoluteLimit = created + AuthClientService.AbsoluteSessionLifetime;
+                    if (context.Properties.ExpiresUtc is { } exp && exp > absoluteLimit)
+                    {
+                        context.Properties.ExpiresUtc = absoluteLimit;
+                        context.ShouldRenew = true;
+                    }
+                }
+            }
+        };
     });
 
 var app = builder.Build();
@@ -104,7 +130,7 @@ app.UseForwardedHeaders();
 
 // Agregamos un middleware para el manejo de errores
 app.UseExceptionHandler("/Home/Error");
-app.UseStatusCodePagesWithReExecute("/Home/Estado/{0}");
+app.UseStatusCodePagesWithReExecute("/Home/Status/{0}");
 if (requiereHttps)
 {
     app.UseHsts();

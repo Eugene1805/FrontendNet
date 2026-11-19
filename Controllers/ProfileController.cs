@@ -15,7 +15,8 @@ public class ProfileController(ProfileClientService profile, AuthClientService a
     public async Task<IActionResult> IndexAsync()
     {
         // D-11: nunca se muestra el JWT completo; solo sus claims informativos.
-        var info = JwtInfo.Read(User.FindFirstValue("jwt"));
+        var tokens = await auth.GetSessionTokensAsync();
+        var info = JwtInfo.Read(tokens?.AccessToken);
         var model = new ProfileSession
         {
             Email = User.FindFirstValue(ClaimTypes.Email) ?? "",
@@ -33,7 +34,7 @@ public class ProfileController(ProfileClientService profile, AuthClientService a
         {
             // Sin el tiempo el resto del profile sigue siendo útil (el API responde 404 si no pudo calcularlo).
             if ((ex as HttpRequestException)?.StatusCode == System.Net.HttpStatusCode.Unauthorized)
-                return RedirectToAction("Salir", "Auth");
+                return RedirectToLoginWithReturnUrl();
         }
         ViewBag.Editable = Editable;
         return View("Index", model);

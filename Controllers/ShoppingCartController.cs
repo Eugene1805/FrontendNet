@@ -85,7 +85,7 @@ public class ShoppingCartController(IShoppingCartService shoppingCart) : AppCont
     {
         // Aquí un 404 (producto inexistente) o 400 (cantidad inválida) se informa en la página, no como error.
         if ((ex as HttpRequestException)?.StatusCode == System.Net.HttpStatusCode.Unauthorized)
-            return RedirectToAction("Salir", "Auth");
+            return RedirectToLoginWithReturnUrl();
         TempData["Error"] = GetMessageFor(ex);
         return Url.IsLocalUrl(returnUrl) ? LocalRedirect(returnUrl!) : RedirectToAction(nameof(Index));
     }

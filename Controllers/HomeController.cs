@@ -20,7 +20,6 @@ public class HomeController : Controller
     }
 
     /// <summary>Página para códigos de estado sin cuerpo (404, 403…) vía UseStatusCodePagesWithReExecute.</summary>
-    [ActionName("Estado")]
     public IActionResult Status(int id)
     {
         // SEC-09: Valida rango válido de HTTP StatusCode (400-599) para evitar ArgumentOutOfRangeException
