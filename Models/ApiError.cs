@@ -1,6 +1,6 @@
 namespace FrontendNet.Models;
 
-/// <summary>API error body: { status?, message, errors?: [{ type, msg, path, location, value }] }.</summary>
+/// <summary>Error payload returned by the backend API: { status, message, errors? }.</summary>
 public class ApiError
 {
     public int? Status { get; set; }

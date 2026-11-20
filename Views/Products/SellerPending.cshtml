@@ -1,0 +1,25 @@
+@using System.Security.Claims
+@{
+    ViewData["Title"] = "Cuenta de vendedor en revisión";
+    var sellerStatus = User.FindFirstValue(SessionTokenManager.SellerStatusClaimType) ?? SellerStatuses.Pending;
+    var explanation = sellerStatus switch
+    {
+        SellerStatuses.Rejected => "Tu solicitud de tienda fue rechazada por un administrador. Revisa tu perfil o comunícate con soporte.",
+        SellerStatuses.Suspended => "Tu cuenta de vendedor se encuentra suspendida. Tus productos y pedidos comerciales permanecen deshabilitados.",
+        _ => "Tu cuenta de vendedor está pendiente de aprobación por un administrador. Podrás publicar productos y gestionar pedidos en cuanto sea aprobada."
+    };
+}
+
+<div class="card mx-auto mt-4" style="max-width: 640px;">
+    <div class="card-body">
+        <h2 class="h4 mb-3">@ViewData["Title"]</h2>
+        <p class="mb-3">
+            Estado actual: <span class="badge @DisplayFormatter.SellerStatusBadgeClass(sellerStatus)">@DisplayFormatter.SellerStatusLabel(sellerStatus)</span>
+        </p>
+        <p class="text-muted">@explanation</p>
+        <div class="mt-3 d-flex gap-2">
+            <a class="btn btn-sm btn-primary" asp-controller="Profile" asp-action="Index">Ver mi perfil</a>
+            <a class="btn btn-sm btn-outline-secondary" asp-controller="Home" asp-action="Index">Ir al inicio</a>
+        </div>
+    </div>
+</div>

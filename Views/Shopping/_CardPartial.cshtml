@@ -1,32 +1,38 @@
 @model Product
+@{
+    var imageSrc = string.IsNullOrWhiteSpace(Model.ImageUrl)
+        ? "https://placehold.co/300x200/FFF/999?text=Art%C3%ADculo"
+        : Model.ImageUrl;
+}
 
 <div class="card h-100">
     <div class="card-header text-center bg-white pt-3">
-        <a asp-action="Detalle" asp-route-id="@Model.ProductId">
-            <img src="@(Model.FileId == null ? "https://placehold.co/300x200/FFF/999?text=Articulo" : $"{ViewBag.Url}/api/files/{Model.FileId}")"
-                 alt="@Model.Title" class="img-fluid" data-url="@ViewBag.Url"
-                 style="max-height: 200px; width: fit-content;">
+        <a asp-action="Details" asp-route-id="@Model.ProductId">
+            <img src="@imageSrc" alt="@Model.Title" class="img-fluid" style="max-height: 200px; width: fit-content;">
         </a>
     </div>
     <div class="card-body d-flex flex-column">
         <p class="card-text">@Model.Title</p>
-        <h5 class="card-title">@Html.DisplayFor(model => model.Price)</h5>
+        <h5 class="card-title">@DisplayFormatter.FormatCurrency(Model.Price)</h5>
         <p class="card-text">
             @foreach (var cat in Model.Categories ?? [])
             {
                 <span class="badge rounded-pill text-bg-warning">@cat.Name</span>
             }
         </p>
-        <p class="mt-auto card-text text-success fw-semibold small"><i class="bi bi-lightning-fill"></i> Envío gratis
+        <p class="mt-auto card-text fw-semibold small @(Model.Stock > 0 ? "text-success" : "text-danger")">
+            @(Model.Stock > 0 ? $"Disponible ({Model.Stock} en existencia)" : "Sin existencias")
         </p>
     </div>
     <div class="card-footer d-flex gap-2">
-        <a class="btn btn-outline-secondary btn-sm" asp-action="Detalle" asp-route-id="@Model.ProductId">Ver</a>
-        <form asp-controller="ShoppingCart" asp-action="Agregar" method="post">
+        <a class="btn btn-outline-secondary btn-sm" asp-action="Details" asp-route-id="@Model.ProductId">Ver</a>
+        <form asp-controller="ShoppingCart" asp-action="Add" method="post">
             <input type="hidden" name="productId" value="@Model.ProductId" />
-            <input type="hidden" name="cantidad" value="1" />
+            <input type="hidden" name="quantity" value="1" />
             <input type="hidden" name="returnUrl" value="@(Context.Request.Path + Context.Request.QueryString)" />
-            <button type="submit" class="btn btn-primary btn-sm"><i class="bi bi-cart-plus"></i> Agregar al carrito</button>
+            <button type="submit" class="btn btn-primary btn-sm" disabled="@(Model.Stock <= 0)">
+                <i class="bi bi-cart-plus"></i> Agregar al carrito
+            </button>
         </form>
     </div>
 </div>

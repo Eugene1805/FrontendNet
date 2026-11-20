@@ -1,31 +1,36 @@
-@model Product
+@model ProductFormModel
 @{
     ViewData["Title"] = "Productos";
     ViewData["SubTitle"] = "Crear";
+    var placeholder = "https://placehold.co/300x450/FFF/999?text=Portada";
 }
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
-    <script src="~/js/producto_portada.js"></script>
+    <script src="~/js/product-image-preview.js" asp-append-version="true"></script>
 }
 
 <nav aria-label="breadcrumb">
     <ol class="breadcrumb small">
-        <li class="breadcrumb-item"><a class="text-decoration-none" title="Volver al listado"
-                asp-action="Index">Listado</a></li>
+        <li class="breadcrumb-item"><a class="text-decoration-none" title="Volver al listado" asp-action="Index">Listado</a></li>
         <li class="breadcrumb-item active" aria-current="page">@ViewData["SubTitle"]</li>
     </ol>
 </nav>
 
 <h2 class="text-center mb-3">@ViewData["Title"] <small class="text-muted fs-5">@ViewData["SubTitle"]</small></h2>
 
-<form asp-action="Crear">
+<form asp-action="Create" method="post" enctype="multipart/form-data">
     <div asp-validation-summary="ModelOnly" class="text-danger"></div>
     <div class="card mt-3">
         <div class="row g-0">
-            <div class="col-md-4">
-                <img src="https://placehold.co/300x450/FFF/999?text=Portada" alt="Vista previa" data-url="@ViewBag.Url"
-                     class="portada img-fluid img-thumbnail mt-2 ms-2" style="max-height: 300px;">
+            <div class="col-md-4 text-center p-3">
+                <img src="@placeholder" data-default-src="@placeholder" alt="Vista previa"
+                     class="product-cover img-fluid img-thumbnail" style="max-height: 300px;">
+                <div class="mt-3 text-start">
+                    <label asp-for="Image" class="form-label small"></label>
+                    <input asp-for="Image" type="file" accept=".jpg,.jpeg,.png,.webp" class="form-control form-control-sm" />
+                    <span asp-validation-for="Image" class="text-danger small"></span>
+                </div>
             </div>
             <div class="col-md-8">
                 <div class="card-body small">
@@ -34,18 +39,28 @@
                         <label asp-for="Title" class="form-label"></label>
                         <span asp-validation-for="Title" class="text-danger"></span>
                     </div>
-                    <div class="form-floating mb-3">
-                        <input asp-for="Price" placeholder="Precio" class="form-control" />
-                        <label asp-for="Price" class="form-label"></label>
-                        <span asp-validation-for="Price" class="text-danger"></span>
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <div class="form-floating">
+                                <input asp-for="Price" type="number" step="0.01" min="0" placeholder="Precio" class="form-control" />
+                                <label asp-for="Price" class="form-label"></label>
+                                <span asp-validation-for="Price" class="text-danger"></span>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-floating">
+                                <input asp-for="Stock" placeholder="Existencias" class="form-control" />
+                                <label asp-for="Stock" class="form-label"></label>
+                                <span asp-validation-for="Stock" class="text-danger"></span>
+                            </div>
+                        </div>
                     </div>
                     <div class="form-floating mb-3">
-                        <select class="form-select" asp-for="FileId"
-                                asp-items="ViewBag.File">
-                            <option value="">Producto sin portada</option>
+                        <select class="form-select" asp-for="CategoryId" asp-items="ViewBag.Categories">
+                            <option value="">Sin categoría inicial</option>
                         </select>
-                        <label asp-for="FileId" class="control-label"></label>
-                        <span asp-validation-for="FileId" class="text-danger"></span>
+                        <label asp-for="CategoryId" class="control-label"></label>
+                        <span asp-validation-for="CategoryId" class="text-danger"></span>
                     </div>
                     <div class="form-floating mb-3">
                         <textarea asp-for="Description" placeholder="Descripción" class="form-control form-control-sm"
@@ -59,7 +74,7 @@
     </div>
 
     <div class="text-center mt-3">
-        <button id="btnEnviar" type="submit" class="btn btn-sm btn-primary">Guardar</button>
+        <button id="submitButton" type="submit" class="btn btn-sm btn-primary">Guardar</button>
         <a class="btn btn-sm btn-outline-secondary" asp-action="Index" title="Cancelar">Cancelar</a>
     </div>
 </form>

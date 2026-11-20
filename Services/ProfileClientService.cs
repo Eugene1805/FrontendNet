@@ -1,33 +1,47 @@
 using FrontendNet.Models;
+
 namespace FrontendNet.Services;
 
 public class ProfileClientService(HttpClient client)
 {
-    /// <summary>GET api/auth/time returns { remainingTime }.</summary>
+    public async Task<UserProfile?> GetMeAsync() =>
+        await client.GetFromJsonAsync<UserProfile>("api/users/me");
+
     public async Task<string?> GetRemainingTimeAsync()
     {
         var time = await client.GetFromJsonAsync<SessionTime>("api/auth/time");
         return time?.RemainingTime;
     }
 
-    // --- Contratos PROPUESTOS (planeacion 5.3 y 5.5), habilitados con Features:PerfilEditable / Features:LogoutApi ---
-
-    /// <summary>PUT api/profile { nombre } responde 204 (con Set-Authorization con el nuevo givenname).</summary>
-    public async Task UpdateNameAsync(string name)
+    public async Task<UserProfile?> UpdateMeAsync(
+        string name,
+        string? phoneNumber,
+        string? storeName,
+        bool isSeller)
     {
-        using var response = await client.PutAsJsonAsync("api/profile", new { name });
+        var payload = new Dictionary<string, object?>
+        {
+            ["name"] = name.Trim(),
+            ["phoneNumber"] = string.IsNullOrWhiteSpace(phoneNumber) ? null : phoneNumber.Trim()
+        };
+
+        if (isSeller && !string.IsNullOrWhiteSpace(storeName))
+            payload["storeName"] = storeName.Trim();
+
+        using var response = await client.PutAsJsonAsync("api/users/me", payload);
+        return await response.Content.ReadFromJsonAsync<UserProfile>();
     }
 
-    /// <summary>PUT api/profile/password responde 204; 400 por política; 401 si la contraseña actual es incorrecta.</summary>
-    public async Task PutPasswordAsync(ChangePassword cambio)
+    public async Task ChangePasswordAsync(ChangePasswordModel model)
     {
-        using var response = await client.PutAsJsonAsync("api/profile/password",
-            new { currentPassword = cambio.CurrentPassword, newPassword = cambio.NewPassword });
+        using var response = await client.PutAsJsonAsync(
+            "api/users/me/password",
+            new { currentPassword = model.CurrentPassword, newPassword = model.NewPassword });
     }
 
-    /// <summary>POST api/auth/salir responde 204 (revoca el JWT).</summary>
-    public async Task RevocaSesionAsync()
+    public async Task LogoutAsync()
     {
-        using var response = await client.PostAsync("api/auth/logout", null);
+        using var request = new HttpRequestMessage(HttpMethod.Post, "api/auth/logout");
+        using var response = await client.SendAsync(request);
     }
 }

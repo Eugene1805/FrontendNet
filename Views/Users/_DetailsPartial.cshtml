@@ -3,6 +3,10 @@
 <div class="card mt-3">
     <div class="card-body">
         <div class="mb-3 ps-3">
+            <label asp-for="Id" class="form-label form-text"></label>
+            <div class="form-text text-body">@Model.Id</div>
+        </div>
+        <div class="mb-3 ps-3">
             <label asp-for="Email" class="form-label form-text"></label>
             <div class="form-text text-body">@Model.Email</div>
         </div>
@@ -11,13 +15,28 @@
             <div class="form-text text-body">@Model.Name</div>
         </div>
         <div class="mb-3 ps-3">
-            <label asp-for="Role" class="form-label form-text"></label>
-            <div class="form-text text-body">@Model.Role</div>
+            <label asp-for="Profile" class="form-label form-text"></label>
+            <div class="form-text text-body">@DisplayFormatter.ProfileLabel(Model.Profile)</div>
         </div>
-        @if (Model.Protected)
+        <div class="mb-3 ps-3">
+            <label asp-for="Status" class="form-label form-text"></label>
+            <div class="form-text text-body">
+                <span class="badge @DisplayFormatter.UserStatusBadgeClass(Model.Status)">@DisplayFormatter.UserStatusLabel(Model.Status)</span>
+            </div>
+        </div>
+        @if (!string.IsNullOrWhiteSpace(Model.SellerStatus))
         {
             <div class="mb-3 ps-3">
-                <span class="badge text-bg-secondary"><i class="bi bi-shield-lock"></i> User protegido</span>
+                <label asp-for="SellerStatus" class="form-label form-text"></label>
+                <div class="form-text text-body">
+                    <span class="badge @DisplayFormatter.SellerStatusBadgeClass(Model.SellerStatus)">@DisplayFormatter.SellerStatusLabel(Model.SellerStatus)</span>
+                </div>
+            </div>
+        }
+        @if (Model.IsAdmin)
+        {
+            <div class="mb-3 ps-3">
+                <span class="badge text-bg-secondary"><i class="bi bi-shield-lock"></i> Administrador protegido</span>
             </div>
         }
     </div>

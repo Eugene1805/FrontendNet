@@ -5,7 +5,7 @@
     var siteKey = Configuration["Cloudflare:TurnstileSiteKey"];
 }
 
-<form asp-action="Index">
+<form asp-action="Index" method="post">
     <div class="card mx-auto" style="max-width: 500px;">
         <div class="card-body">
             <h1 class="h3 text-center">Bienvenido a Mercado Libre</h1>
@@ -26,11 +26,14 @@
             {
                 <div class="cf-turnstile d-flex justify-content-center mb-3" data-sitekey="@siteKey" data-theme="auto"></div>
             }
-            <p class="card-text small">Ingrese sus credenciales para poder disfrutar de todo el contenido de la plataforma.</p>
-            <p class="card-text small text-end"><a asp-controller="Home" asp-action="Index" class="link-primary text-decoration-none">Crear cuenta</a></p>
+            <p class="card-text small">Ingrese sus credenciales para acceder a la plataforma.</p>
+            <div class="d-flex justify-content-between small">
+                <a asp-controller="Auth" asp-action="ForgotPassword" class="link-primary text-decoration-none">¿Olvidaste tu contraseña?</a>
+                <a asp-controller="Auth" asp-action="Register" class="link-primary text-decoration-none">Crear cuenta</a>
+            </div>
         </div>
         <div class="card-footer text-center">
-            <button type="submit" class="btn btn-primary">Iniciar sesión</button>
+            <button id="submitButton" type="submit" class="btn btn-primary">Iniciar sesión</button>
         </div>
     </div>
 </form>

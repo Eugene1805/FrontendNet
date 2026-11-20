@@ -7,7 +7,7 @@
 <form asp-action="Index" method="get" class="row small g-2 mb-3">
     <div class="col-12 col-md-4">
         <div class="input-group input-group-sm">
-            <input name="s" id="s" value="@ViewBag.search" type="search" class="form-control"
+            <input name="s" id="s" value="@ViewBag.Search" type="search" maxlength="255" class="form-control"
                    placeholder="Buscar por título">
             <button class="btn btn-primary" type="submit" title="Buscar"><i class="bi bi-search"></i></button>
         </div>
@@ -18,7 +18,7 @@
         </select>
     </div>
     <div class="col-6 col-md-3">
-        <select name="orden" class="form-select form-select-sm" asp-items="ViewBag.Ordenes" aria-label="Orden">
+        <select name="order" class="form-select form-select-sm" asp-items="ViewBag.SortOptions" aria-label="Orden">
             <option value="">Orden predeterminado</option>
         </select>
     </div>

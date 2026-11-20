@@ -6,24 +6,27 @@
 
 <nav aria-label="breadcrumb">
     <ol class="breadcrumb small">
-        <li class="breadcrumb-item"><a class="text-decoration-none" title="Volver al listado"
-                asp-action="Index">Listado</a></li>
+        <li class="breadcrumb-item"><a class="text-decoration-none" title="Volver al listado" asp-action="Index">Listado</a></li>
         <li class="breadcrumb-item active" aria-current="page">@ViewData["SubTitle"]</li>
     </ol>
 </nav>
 
 <h2 class="text-center mb-3">@ViewData["Title"] <small class="text-muted fs-5">@ViewData["SubTitle"]</small></h2>
 
+@if (ViewData["ErrorMessage"] is string errorMessage && !string.IsNullOrWhiteSpace(errorMessage))
+{
+    <div class="alert alert-danger small" role="alert">@errorMessage</div>
+}
+
 @if (!Model.Protected)
 {
     <p class="text-danger">¿Está seguro que desea eliminar este elemento?</p>
     <p class="text-warning-emphasis small">Si la categoría está asignada a productos, se quitará de todos ellos (los productos no se eliminan).</p>
-    <p class="text-danger">@ViewData["ErrorMessage"]</p>
 
     <partial name="_DetailsPartial" />
-    <form asp-action="Eliminar">
+    <form asp-action="Delete" asp-route-id="@Model.CategoryId" method="post">
         <div class="text-center mt-3">
-            <button id="btnEnviar" type="submit" class="btn btn-sm btn-primary">Eliminar</button>
+            <button id="submitButton" type="submit" class="btn btn-sm btn-primary">Eliminar</button>
             <a class="btn btn-sm btn-outline-secondary" asp-action="Index" title="Cancelar">Cancelar</a>
         </div>
     </form>

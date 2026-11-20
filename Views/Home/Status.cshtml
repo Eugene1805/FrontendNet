@@ -1,6 +1,6 @@
 @{
-    int codigo = ViewBag.Codigo ?? 500;
-    ViewData["Title"] = codigo switch
+    int statusCode = ViewBag.StatusCode ?? 500;
+    ViewData["Title"] = statusCode switch
     {
         404 => "Página no encontrada",
         403 => "Acceso denegado",
@@ -10,9 +10,9 @@
 }
 
 <div class="container">
-    <h1 class="text-danger">@codigo <small class="fs-4">@ViewData["Title"]</small></h1>
+    <h1 class="text-danger">@statusCode <small class="fs-4">@ViewData["Title"]</small></h1>
     <p class="text-muted">
-        @(codigo == 404
+        @(statusCode == 404
             ? "El elemento que busca no existe o ya no está disponible."
             : "No fue posible atender la solicitud.")
     </p>

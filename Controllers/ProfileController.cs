@@ -1,3 +1,4 @@
+using System.Net;
 using System.Security.Claims;
 using FrontendNet.Helpers;
 using FrontendNet.Models;
@@ -8,103 +9,131 @@ using Microsoft.AspNetCore.Mvc;
 namespace FrontendNet;
 
 [Authorize]
-public class ProfileController(ProfileClientService profile, AuthClientService auth, IConfiguration configuration) : AppController
+public class ProfileController(
+    ProfileClientService profile,
+    AuthClientService auth,
+    ISessionTokenManager tokenManager) : AppController
 {
-    private bool Editable => configuration.GetValue<bool>("Features:PerfilEditable");
-
     public async Task<IActionResult> IndexAsync()
     {
-        // D-11: nunca se muestra el JWT completo; solo sus claims informativos.
-        var info = JwtInfo.Read(User.FindFirstValue("jwt"));
-        var model = new ProfileSession
-        {
-            Email = User.FindFirstValue(ClaimTypes.Email) ?? "",
-            Name = User.FindFirstValue(ClaimTypes.Name) ?? "",
-            Profile = User.FindFirstValue(ClaimTypes.Role) ?? "",
-            ExpiraUtc = info?.Expira,
-            Emisor = info?.Emisor,
-            Audiencia = info?.Audiencia
-        };
+        UserProfile? me;
         try
         {
-            model.RemainingTime = await profile.GetRemainingTimeAsync();
+            me = await profile.GetMeAsync();
         }
         catch (Exception ex) when (IsApiError(ex))
         {
-            // Sin el tiempo el resto del profile sigue siendo útil (el API responde 404 si no pudo calcularlo).
-            if ((ex as HttpRequestException)?.StatusCode == System.Net.HttpStatusCode.Unauthorized)
-                return RedirectToAction("Salir", "Auth");
+            return await HandleGetErrorAsync(ex);
         }
-        ViewBag.Editable = Editable;
-        return View("Index", model);
+
+        var jwtInfo = JwtInfo.Read(tokenManager.GetCurrentAccessToken(User));
+        var viewModel = new ProfileSessionViewModel
+        {
+            Id = me?.Id ?? GetCurrentUserId() ?? string.Empty,
+            Email = me?.Email ?? User.FindFirstValue(ClaimTypes.Email) ?? string.Empty,
+            Name = me?.Name ?? User.FindFirstValue(ClaimTypes.Name) ?? string.Empty,
+            Profile = me?.Profile ?? User.FindFirstValue(ClaimTypes.Role) ?? string.Empty,
+            Status = me?.Status ?? UserStatuses.Active,
+            PhoneNumber = me?.PhoneNumber,
+            StoreName = me?.StoreName,
+            SellerStatus = me?.SellerStatus ?? User.FindFirstValue(SessionTokenManager.SellerStatusClaimType),
+            ExpiresUtc = jwtInfo?.ExpiresUtc,
+            Issuer = jwtInfo?.Issuer,
+            Audience = jwtInfo?.Audience
+        };
+
+        try
+        {
+            viewModel.RemainingTime = await profile.GetRemainingTimeAsync();
+        }
+        catch (Exception ex) when (IsApiError(ex))
+        {
+            if (GetStatusCode(ex) == HttpStatusCode.Unauthorized)
+                return await HandleUnauthorizedAsync();
+        }
+
+        return View("Index", viewModel);
     }
 
-    [ActionName("Editar")]
-    public IActionResult Edit()
+    public async Task<IActionResult> Edit()
     {
-        if (!Editable) return NotFound();
-        return View("Edit", new ProfileName { Name = User.FindFirstValue(ClaimTypes.Name) ?? "" });
+        try
+        {
+            var me = await profile.GetMeAsync();
+            if (me is null) return NotFound();
+
+            ViewBag.IsSeller = string.Equals(me.Profile, Roles.Seller, StringComparison.OrdinalIgnoreCase);
+            return View("Edit", new ProfileEditModel
+            {
+                Name = me.Name,
+                PhoneNumber = me.PhoneNumber,
+                StoreName = me.StoreName
+            });
+        }
+        catch (Exception ex) when (IsApiError(ex))
+        {
+            return await HandleGetErrorAsync(ex);
+        }
     }
 
     [HttpPost]
-    [ActionName("Editar")]
-    public async Task<IActionResult> EditAsync(ProfileName model)
+    public async Task<IActionResult> EditAsync(ProfileEditModel model)
     {
-        if (!Editable) return NotFound();
-        if (ModelState.IsValid)
+        var isSeller = User.IsInRole(Roles.Seller);
+        ViewBag.IsSeller = isSeller;
+
+        if (isSeller && string.IsNullOrWhiteSpace(model.StoreName))
+            ModelState.AddModelError(nameof(model.StoreName), "El campo Nombre de la tienda es obligatorio.");
+
+        if (!ModelState.IsValid)
+            return View("Edit", model);
+
+        try
         {
-            try
-            {
-                await profile.UpdateNameAsync(model.Name);
-                // El API reemplaza el JWT (Set-Authorization); aquí se actualiza el claim Name de la cookie.
-                var claims = User.Claims.Where(c => c.Type != ClaimTypes.Name).ToList();
-                claims.Add(new Claim(ClaimTypes.Name, model.Name));
-                await auth.SignInAsync(claims);
-                TempData["Exito"] = "Nombre actualizado.";
-                return RedirectToAction(nameof(Index));
-            }
-            catch (Exception ex) when (IsApiError(ex))
-            {
-                var result = HandleApiError(ex, "Nombre");
-                if (result != null) return result;
-            }
+            var updated = await profile.UpdateMeAsync(model.Name, model.PhoneNumber, model.StoreName, isSeller);
+            await tokenManager.UpdateUserNameAsync(HttpContext, updated?.Name ?? model.Name.Trim());
+            TempData["Success"] = "Perfil actualizado correctamente.";
+            return RedirectToAction(nameof(Index));
         }
+        catch (Exception ex) when (IsApiError(ex))
+        {
+            var result = await HandleApiErrorAsync(ex, nameof(model.Name));
+            if (result is not null) return result;
+        }
+
         return View("Edit", model);
     }
 
-    [ActionName("CambiarPassword")]
-    public IActionResult ChangePassword()
-    {
-        if (!Editable) return NotFound();
-        return View("ChangePassword", new ChangePassword());
-    }
+    public IActionResult ChangePassword() =>
+        View("ChangePassword", new ChangePasswordModel());
 
     [HttpPost]
-    [ActionName("CambiarPassword")]
-    public async Task<IActionResult> ChangePasswordAsync(ChangePassword model)
+    public async Task<IActionResult> ChangePasswordAsync(ChangePasswordModel model)
     {
-        if (!Editable) return NotFound();
-        if (ModelState.IsValid)
+        if (!ModelState.IsValid)
+            return View("ChangePassword", new ChangePasswordModel());
+
+        try
         {
-            try
+            await profile.ChangePasswordAsync(model);
+            await auth.SignOutLocalAsync();
+            TempData["Success"] = "Contraseña actualizada. Inicia sesión nuevamente con tu nueva contraseña.";
+            return RedirectToAction("Index", "Auth");
+        }
+        catch (Exception ex) when (IsApiError(ex))
+        {
+            if (GetStatusCode(ex) == HttpStatusCode.Unauthorized)
             {
-                await profile.PutPasswordAsync(model);
-                TempData["Exito"] = "Contraseña actualizada.";
-                return RedirectToAction(nameof(Index));
+                ModelState.AddModelError(nameof(model.CurrentPassword), "La contraseña actual es incorrecta.");
             }
-            catch (Exception ex) when (IsApiError(ex))
+            else
             {
-                // Aquí un 401 significa "contraseña actual incorrecta" (contrato 5.3), no sesión caducada.
-                if ((ex as HttpRequestException)?.StatusCode == System.Net.HttpStatusCode.Unauthorized)
-                    ModelState.AddModelError(nameof(model.CurrentPassword), "La contraseña actual es incorrecta.");
-                else
-                {
-                    var result = HandleApiError(ex);
-                    if (result != null) return result;
-                }
+                var result = await HandleApiErrorAsync(ex, nameof(model.CurrentPassword));
+                if (result is not null) return result;
             }
         }
-        // Nunca se devuelven las contraseñas escritas al formulario.
-        return View("ChangePassword", new ChangePassword());
+
+        // Never echo submitted passwords back into the rendered form.
+        return View("ChangePassword", new ChangePasswordModel());
     }
 }

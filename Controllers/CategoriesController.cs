@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace FrontendNet;
 
-[Authorize(Roles = "ADMIN,Administrador")]
+[Authorize(Roles = Roles.Admin)]
 public class CategoriesController(CategoryClientService categories) : AppController
 {
     public async Task<IActionResult> Index()
@@ -16,33 +16,27 @@ public class CategoriesController(CategoryClientService categories) : AppControl
         }
         catch (Exception ex) when (IsApiError(ex))
         {
-            return ErrorGet(ex);
+            return await HandleGetErrorAsync(ex);
         }
     }
 
-    [ActionName("Detalle")]
     public async Task<IActionResult> Details(int id)
     {
         try
         {
             var item = await categories.GetAsync(id);
-            if (item == null) return NotFound();
+            if (item is null) return NotFound();
             return View("Details", item);
         }
         catch (Exception ex) when (IsApiError(ex))
         {
-            return ErrorGet(ex);
+            return await HandleGetErrorAsync(ex);
         }
     }
 
-    [ActionName("Crear")]
-    public IActionResult Create()
-    {
-        return View("Create");
-    }
+    public IActionResult Create() => View("Create");
 
     [HttpPost]
-    [ActionName("Crear")]
     public async Task<IActionResult> CreateAsync(Category itemToCreate)
     {
         if (ModelState.IsValid)
@@ -50,88 +44,88 @@ public class CategoriesController(CategoryClientService categories) : AppControl
             try
             {
                 await categories.PostAsync(itemToCreate);
+                TempData["Success"] = "Categoría creada correctamente.";
                 return RedirectToAction(nameof(Index));
             }
             catch (Exception ex) when (IsApiError(ex))
             {
-                var result = HandleApiError(ex);
-                if (result != null) return result;
+                var result = await HandleApiErrorAsync(ex, nameof(itemToCreate.Name));
+                if (result is not null) return result;
             }
         }
+
         return View("Create", itemToCreate);
     }
 
-    [ActionName("Editar")]
-    public async Task<IActionResult> EditAsync(int id)
+    public async Task<IActionResult> Edit(int id)
     {
         try
         {
             var item = await categories.GetAsync(id);
-            if (item == null) return NotFound();
+            if (item is null) return NotFound();
             return View("Edit", item);
         }
         catch (Exception ex) when (IsApiError(ex))
         {
-            return ErrorGet(ex);
+            return await HandleGetErrorAsync(ex);
         }
     }
 
     [HttpPost]
-    [ActionName("Editar")]
     public async Task<IActionResult> EditAsync(int id, Category itemToUpdate)
     {
         if (id != itemToUpdate.CategoryId)
-        {
             return NotFound();
-        }
 
         if (ModelState.IsValid)
         {
             try
             {
                 await categories.PutAsync(itemToUpdate);
+                TempData["Success"] = "Categoría actualizada correctamente.";
                 return RedirectToAction(nameof(Index));
             }
             catch (Exception ex) when (IsApiError(ex))
             {
-                var result = HandleApiError(ex);
-                if (result != null) return result;
+                var result = await HandleApiErrorAsync(ex, nameof(itemToUpdate.Name));
+                if (result is not null) return result;
             }
         }
+
         return View("Edit", itemToUpdate);
     }
 
-    [ActionName("Eliminar")]
-    public async Task<IActionResult> DeleteAsync(int id, string? error = null)
+    public async Task<IActionResult> Delete(int id, string? error = null)
     {
         try
         {
             var item = await categories.GetAsync(id);
-            if (item == null) return NotFound();
-            ViewBag.ErrorMessage = error;
+            if (item is null) return NotFound();
+
+            ViewData["ErrorMessage"] = error;
             return View("Delete", item);
         }
         catch (Exception ex) when (IsApiError(ex))
         {
-            return ErrorGet(ex);
+            return await HandleGetErrorAsync(ex);
         }
     }
 
     [HttpPost]
-    [ActionName("Eliminar")]
-    public async Task<IActionResult> Delete(int id)
+    [ActionName("Delete")]
+    public async Task<IActionResult> DeleteConfirmedAsync(int id)
     {
         try
         {
             await categories.DeleteAsync(id);
+            TempData["Success"] = "Categoría eliminada correctamente.";
             return RedirectToAction(nameof(Index));
         }
         catch (Exception ex) when (IsApiError(ex))
         {
-            // D-06: el API no responde 409; la FK es ON DELETE CASCADE y las protegidas responden 400 con su mensaje.
-            return HandleApiError(ex) is { } result
-                ? result
-                : RedirectToAction("Eliminar", new { id, error = GetMessageFor(ex) });
+            var result = await HandleApiErrorAsync(ex);
+            if (result is not null) return result;
+            return RedirectToAction(nameof(Delete), new { id, error = GetUserMessage(ex) });
         }
     }
 }

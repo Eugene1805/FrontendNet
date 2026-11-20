@@ -1,7 +1,8 @@
 @model List<OrderSummary>
 @{
-    bool esAdmin = User.IsInRole("Administrador") || User.IsInRole("ADMIN");
-    ViewData["Title"] = esAdmin ? "Pedidos" : "Mis pedidos";
+    bool isAdmin = User.IsInRole(Roles.Admin);
+    bool isSeller = User.IsInRole(Roles.Seller);
+    ViewData["Title"] = isAdmin || isSeller ? "Pedidos" : "Mis pedidos";
     ViewData["SubTitle"] = "Listado";
 }
 <h2 class="text-center mb-3">@ViewData["Title"] <small class="text-muted fs-5">@ViewData["SubTitle"]</small></h2>
@@ -9,7 +10,7 @@
 <form asp-action="Index" method="get" class="row small g-2 mb-3">
     <div class="col-12 col-sm-6 col-md-4 col-lg-3">
         <div class="input-group input-group-sm">
-            <select name="estado" class="form-select" asp-items="ViewBag.Estados" aria-label="Estado">
+            <select name="status" class="form-select" asp-items="ViewBag.Statuses" aria-label="Estado">
                 <option value="">Todos los estados</option>
             </select>
             <button class="btn btn-primary" type="submit" title="Filtrar"><i class="bi bi-funnel"></i></button>
@@ -26,9 +27,10 @@
                 <tr>
                     <th>Pedido</th>
                     <th>Fecha</th>
-                    @if (esAdmin)
+                    @if (isAdmin)
                     {
-                        <th>Usuario</th>
+                        <th>Comprador</th>
+                        <th>Vendedor</th>
                     }
                     <th>Estado</th>
                     <th>Total</th>
@@ -39,16 +41,19 @@
                 @foreach (var item in Model)
                 {
                     <tr>
-                        <td class="text-center">#@item.PedidoId</td>
-                        <td>@item.Date.ToLocalTime().ToString("g")</td>
-                        @if (esAdmin)
+                        <td class="text-center">#@item.Id</td>
+                        <td>@DisplayFormatter.FormatLocalDateTime(item.CreatedAt)</td>
+                        @if (isAdmin)
                         {
-                            <td>@item.User</td>
+                            <td class="text-break">@item.BuyerId</td>
+                            <td class="text-break">@item.SellerId</td>
                         }
-                        <td class="text-center"><span class="badge text-bg-secondary">@item.Estado</span></td>
-                        <td class="text-end">@item.Total</td>
+                        <td class="text-center">
+                            <span class="badge @DisplayFormatter.OrderStatusBadgeClass(item.Status)">@DisplayFormatter.OrderStatusLabel(item.Status)</span>
+                        </td>
+                        <td class="text-end">@DisplayFormatter.FormatCurrency(item.Total)</td>
                         <td>
-                            <a class="text-decoration-none small text-uppercase" asp-action="Detalle" asp-route-id="@item.PedidoId">Detalles</a>
+                            <a class="text-decoration-none small text-uppercase" asp-action="Details" asp-route-id="@item.Id">Detalles</a>
                         </td>
                     </tr>
                 }

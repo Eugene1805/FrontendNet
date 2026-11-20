@@ -1,32 +1,29 @@
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
-using FrontendNet.Helpers;
+
 namespace FrontendNet.Models;
 
+/// <summary>User summary returned by /api/users.</summary>
 public class User
 {
     [Display(Name = "Id")]
-    public string? Id { get; set; }
-    [Required(ErrorMessage = "El campo {0} es obligatorio.")]
+    public string Id { get; set; } = string.Empty;
+
     [Display(Name = "Nombre")]
     public required string Name { get; set; }
-    [Required(ErrorMessage = "El campo {0} es obligatorio.")]
-    [EmailAddress(ErrorMessage = "El campo {0} no es un correo electrónico válido.")]
+
     [Display(Name = "Correo electrónico")]
     public required string Email { get; set; }
-    [Required(ErrorMessage = "El campo {0} es obligatorio.")]
-    [Display(Name = "Rol")]
+
+    [Display(Name = "Perfil")]
     public required string Profile { get; set; }
-    [JsonIgnore]
-    public string Role { get => Profile; set => Profile = value; }
-    [Display(Name = "Protegido")]
-    [JsonConverter(typeof(NumericBooleanConverter))]
-    public string? Status { get; set; }
+
+    [Display(Name = "Estado")]
+    public string Status { get; set; } = UserStatuses.Active;
+
+    [Display(Name = "Estado de vendedor")]
     public string? SellerStatus { get; set; }
+
     [JsonIgnore]
-    public bool Protected => false;
-    [MinLength(6, ErrorMessage = "El campo {0} debe tener un mínimo de {1} caracteres.")]
-    [DataType(DataType.Password)]
-    [Display(Name = "Nueva contraseña (opcional)")]
-    public string? Password { get; set; }
+    public bool IsAdmin => string.Equals(Profile, Roles.Admin, StringComparison.OrdinalIgnoreCase);
 }

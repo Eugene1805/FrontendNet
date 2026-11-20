@@ -10,34 +10,21 @@
 </nav>
 <h2 class="text-center mb-3">@ViewData["Title"] <small class="text-muted fs-5">@ViewData["SubTitle"]</small></h2>
 <div class="row small mb-3">
-    <div class="col">
-        <a class="text-decoration-none" asp-action="Crear" title="Crear nuevo">Crear nuevo</a>
-    </div>
     <div class="col text-end">
-        Mostrando @Model.Count() de @ViewBag.Total usuarios
+        Mostrando @Model.Count de @ViewBag.Total usuarios
     </div>
 </div>
-@if (Model.Count() > 0)
+@if (Model.Count > 0)
 {
     <div class="table-responsive">
-        <table class="table table-striped table-bordered small">
+        <table class="table table-striped table-bordered small align-middle">
             <thead class="text-center">
                 <tr>
-                    <th>
-                        @Html.DisplayNameFor(model => model.First().Id)
-                    </th>
-                    <th>
-                        @Html.DisplayNameFor(model => model.First().Email)
-                    </th>
-                    <th>
-                        @Html.DisplayNameFor(model => model.First().Name)
-                    </th>
-                    <th>
-                        @Html.DisplayNameFor(model => model.First().Role)
-                    </th>
-                    <th>
-                        @Html.DisplayNameFor(model => model.First().Protected)
-                    </th>
+                    <th>@Html.DisplayNameFor(model => model.First().Email)</th>
+                    <th>@Html.DisplayNameFor(model => model.First().Name)</th>
+                    <th>@Html.DisplayNameFor(model => model.First().Profile)</th>
+                    <th>@Html.DisplayNameFor(model => model.First().Status)</th>
+                    <th>@Html.DisplayNameFor(model => model.First().SellerStatus)</th>
                     <th></th>
                     <th></th>
                     <th></th>
@@ -47,34 +34,38 @@
                 @foreach (var item in Model)
                 {
                     <tr>
+                        <td>@item.Email</td>
+                        <td>@item.Name</td>
                         <td>
-                            @Html.DisplayFor(modelItem => item.Id)
-                        </td>
-                        <td>
-                            @Html.DisplayFor(modelItem => item.Email)
-                        </td>
-                        <td>
-                            @Html.DisplayFor(modelItem => item.Name)
-                        </td>
-                        <td>
-                            @Html.DisplayFor(modelItem => item.Role)
+                            @DisplayFormatter.ProfileLabel(item.Profile)
+                            @if (item.IsAdmin)
+                            {
+                                <i class="bi bi-shield-lock ms-1" title="Administrador protegido"></i>
+                            }
                         </td>
                         <td class="text-center">
-                            @if (item.Protected) { <i class="bi bi-shield-lock" title="Usuario protegido"></i> }
+                            <span class="badge @DisplayFormatter.UserStatusBadgeClass(item.Status)">@DisplayFormatter.UserStatusLabel(item.Status)</span>
                         </td>
-                        <td width="1">
-                            <a class="text-decoration-none small text-uppercase" asp-action="Detalle"
-                               asp-route-id="@item.Email">Detalles</a>
-                        </td>
-                        <td width="1">
-                            <a class="text-decoration-none small text-uppercase" asp-action="Editar"
-                               asp-route-email="@item.Email">Editar</a>
-                        </td>
-                        <td width="1">
-                            @if (!item.Protected)
+                        <td class="text-center">
+                            @if (!string.IsNullOrWhiteSpace(item.SellerStatus))
                             {
-                                <a class="text-decoration-none small text-uppercase" asp-action="Eliminar"
-                                   asp-route-id="@item.Email">Eliminar</a>
+                                <span class="badge @DisplayFormatter.SellerStatusBadgeClass(item.SellerStatus)">@DisplayFormatter.SellerStatusLabel(item.SellerStatus)</span>
+                            }
+                            else
+                            {
+                                <span class="text-muted">—</span>
+                            }
+                        </td>
+                        <td width="1">
+                            <a class="text-decoration-none small text-uppercase" asp-action="Details" asp-route-email="@item.Email">Detalles</a>
+                        </td>
+                        <td width="1">
+                            <a class="text-decoration-none small text-uppercase" asp-action="Edit" asp-route-email="@item.Email">Editar</a>
+                        </td>
+                        <td width="1">
+                            @if (!item.IsAdmin)
+                            {
+                                <a class="text-decoration-none small text-uppercase" asp-action="Delete" asp-route-email="@item.Email">Eliminar</a>
                             }
                         </td>
                     </tr>

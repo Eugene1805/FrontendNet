@@ -2,6 +2,9 @@
 @{
     ViewData["Title"] = "Bitácora";
     ViewData["SubTitle"] = "Listado";
+    int limit = ViewBag.Limit ?? 50;
+    int? currentBefore = ViewBag.CurrentBefore as int?;
+    int? nextBefore = ViewBag.NextBefore as int?;
 }
 
 <nav aria-label="breadcrumb">
@@ -12,66 +15,68 @@
 
 <h2 class="text-center mb-3">@ViewData["Title"] <small class="text-muted fs-5">@ViewData["SubTitle"]</small></h2>
 
-<div class="row small mb-3">
+<div class="row small mb-3 align-items-center">
+    <div class="col">
+        <form asp-action="Index" method="get" class="d-inline-flex align-items-center gap-2">
+            <label for="limit" class="form-label mb-0">Registros por página:</label>
+            <select id="limit" name="limit" class="form-select form-select-sm" style="width: auto;">
+                <option value="20" selected="@(limit == 20)">20</option>
+                <option value="50" selected="@(limit == 50)">50</option>
+                <option value="100" selected="@(limit == 100)">100</option>
+            </select>
+            <button type="submit" class="btn btn-sm btn-outline-primary">Aplicar</button>
+        </form>
+    </div>
     <div class="col text-end">
-        Mostrando @Model.Count() de @ViewBag.Total elementos
+        Mostrando @Model.Count elementos
     </div>
 </div>
 
-@if (Model.Count() > 0)
+@if (Model.Count > 0)
 {
     <div class="table-responsive">
-        <table class="table table-striped table-bordered small">
+        <table class="table table-striped table-bordered small align-middle">
             <thead class="text-center">
                 <tr>
-                    <th>
-                        @Html.DisplayNameFor(model => model.First().AuditLogId)
-                    </th>
-                    <th>
-                        @Html.DisplayNameFor(model => model.First().Action)
-                    </th>
-                    <th>
-                        @Html.DisplayNameFor(model => model.First().ElementId)
-                    </th>
-                    <th>
-                        @Html.DisplayNameFor(model => model.First().IP)
-                    </th>
-                    <th>
-                        @Html.DisplayNameFor(model => model.First().User)
-                    </th>
-                    <th>
-                        @Html.DisplayNameFor(model => model.First().Date)
-                    </th>
+                    <th>@Html.DisplayNameFor(model => model.First().Id)</th>
+                    <th>@Html.DisplayNameFor(model => model.First().Action)</th>
+                    <th>@Html.DisplayNameFor(model => model.First().TargetType)</th>
+                    <th>@Html.DisplayNameFor(model => model.First().TargetId)</th>
+                    <th>@Html.DisplayNameFor(model => model.First().ActorUserId)</th>
+                    <th>@Html.DisplayNameFor(model => model.First().IpAddress)</th>
+                    <th>@Html.DisplayNameFor(model => model.First().Outcome)</th>
+                    <th>@Html.DisplayNameFor(model => model.First().OccurredAt)</th>
                 </tr>
             </thead>
             <tbody>
                 @foreach (var item in Model)
                 {
                     <tr>
-                        <td>
-                            @Html.DisplayFor(modelItem => item.AuditLogId)
+                        <td>@item.Id</td>
+                        <td>@item.Action</td>
+                        <td>@(item.TargetType ?? "—")</td>
+                        <td class="text-break">@(item.TargetId ?? "—")</td>
+                        <td class="text-break">@(item.ActorUserId ?? "—")</td>
+                        <td>@(item.IpAddress ?? "—")</td>
+                        <td class="text-center">
+                            <span class="badge @DisplayFormatter.AuditOutcomeBadgeClass(item.Outcome)">@DisplayFormatter.AuditOutcomeLabel(item.Outcome)</span>
                         </td>
-                        <td>
-                            @Html.DisplayFor(modelItem => item.Action)
-                        </td>
-                        <td>
-                            @Html.DisplayFor(modelItem => item.ElementId)
-                        </td>
-                        <td>
-                            @Html.DisplayFor(modelItem => item.IP)
-                        </td>
-                        <td>
-                            @Html.DisplayFor(modelItem => item.User)
-                        </td>
-                        <td>
-                            @TimeZoneInfo.ConvertTimeBySystemTimeZoneId(Convert.ToDateTime(item.Date), "America/Mexico_City")
-                        </td>
+                        <td>@DisplayFormatter.FormatLocalDateTime(item.OccurredAt)</td>
                     </tr>
                 }
             </tbody>
         </table>
     </div>
-    <partial name="_PaginationPartial" />
+    <div class="d-flex justify-content-center gap-2 mt-3">
+        @if (currentBefore is > 0)
+        {
+            <a class="btn btn-sm btn-outline-secondary" asp-action="Index" asp-route-limit="@limit">Más recientes</a>
+        }
+        @if (nextBefore is > 0)
+        {
+            <a class="btn btn-sm btn-outline-primary" asp-action="Index" asp-route-limit="@limit" asp-route-before="@nextBefore">Anteriores</a>
+        }
+    </div>
 }
 else
 {

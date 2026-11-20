@@ -1,10 +1,12 @@
+using System.Net;
+using FrontendNet.Models;
 using FrontendNet.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace FrontendNet;
 
-[Authorize(Roles = "BUYER,Usuario")]
+[Authorize(Roles = Roles.Buyer)]
 public class ShoppingCartController(IShoppingCartService shoppingCart) : AppController
 {
     public async Task<IActionResult> Index()
@@ -15,78 +17,80 @@ public class ShoppingCartController(IShoppingCartService shoppingCart) : AppCont
         }
         catch (Exception ex) when (IsApiError(ex))
         {
-            return ErrorGet(ex);
+            return await HandleGetErrorAsync(ex);
         }
     }
 
-    // Las acciones que modifican datos son POST y todos los POST validan antiforgery (filtro global).
     [HttpPost]
-    [ActionName("Agregar")]
-    public async Task<IActionResult> Add(int productId, int cantidad = 1, string? returnUrl = null)
+    public async Task<IActionResult> AddAsync(int productId, int quantity = 1, string? returnUrl = null)
     {
         try
         {
-            await shoppingCart.AgregarAsync(productId, cantidad);
-            TempData["Exito"] = "Producto agregado al carrito.";
+            await shoppingCart.AddAsync(productId, quantity);
+            TempData["Success"] = "Producto agregado al carrito.";
         }
         catch (Exception ex) when (IsApiError(ex))
         {
-            return Falla(ex, returnUrl);
+            return await HandleFailureAsync(ex, returnUrl);
         }
+
         return Url.IsLocalUrl(returnUrl) ? LocalRedirect(returnUrl!) : RedirectToAction(nameof(Index));
     }
 
     [HttpPost]
-    [ActionName("Actualizar")]
-    public async Task<IActionResult> Update(int productId, int cantidad)
+    public async Task<IActionResult> UpdateAsync(int productId, int quantity)
     {
         try
         {
-            await shoppingCart.ActualizarAsync(productId, cantidad);
+            await shoppingCart.UpdateAsync(productId, quantity);
+            TempData["Success"] = "Cantidad actualizada.";
         }
         catch (Exception ex) when (IsApiError(ex))
         {
-            return Falla(ex, null);
+            return await HandleFailureAsync(ex, null);
         }
+
         return RedirectToAction(nameof(Index));
     }
 
     [HttpPost]
-    [ActionName("Quitar")]
-    public async Task<IActionResult> Remove(int productId)
+    public async Task<IActionResult> RemoveAsync(int productId)
     {
         try
         {
-            await shoppingCart.QuitarAsync(productId);
+            await shoppingCart.RemoveAsync(productId);
+            TempData["Success"] = "Producto eliminado del carrito.";
         }
         catch (Exception ex) when (IsApiError(ex))
         {
-            return Falla(ex, null);
+            return await HandleFailureAsync(ex, null);
         }
+
         return RedirectToAction(nameof(Index));
     }
 
     [HttpPost]
-    [ActionName("Vaciar")]
-    public async Task<IActionResult> Clear()
+    public async Task<IActionResult> ClearAsync()
     {
         try
         {
-            await shoppingCart.VaciarAsync();
+            await shoppingCart.ClearAsync();
+            TempData["Success"] = "Carrito vaciado correctamente.";
         }
         catch (Exception ex) when (IsApiError(ex))
         {
-            return Falla(ex, null);
+            return await HandleFailureAsync(ex, null);
         }
+
         return RedirectToAction(nameof(Index));
     }
 
-    private IActionResult Falla(Exception ex, string? returnUrl)
+    private async Task<IActionResult> HandleFailureAsync(Exception ex, string? returnUrl)
     {
-        // Aquí un 404 (producto inexistente) o 400 (cantidad inválida) se informa en la página, no como error.
-        if ((ex as HttpRequestException)?.StatusCode == System.Net.HttpStatusCode.Unauthorized)
-            return RedirectToAction("Salir", "Auth");
-        TempData["Error"] = GetMessageFor(ex);
+        if (GetStatusCode(ex) == HttpStatusCode.Unauthorized)
+            return await HandleUnauthorizedAsync();
+
+        TempData["Error"] = GetUserMessage(ex);
         return Url.IsLocalUrl(returnUrl) ? LocalRedirect(returnUrl!) : RedirectToAction(nameof(Index));
     }
 }

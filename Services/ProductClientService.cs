@@ -1,37 +1,69 @@
+using System.Net.Http.Headers;
 using FrontendNet.Helpers;
 using FrontendNet.Models;
+
 namespace FrontendNet.Services;
 
 public class ProductClientService(HttpClient client)
 {
-    public async Task<List<Product>?> GetAsync(string? search)
+    public async Task<List<Product>?> GetAsync(string? search = null)
     {
-        var url = string.IsNullOrWhiteSpace(search) ? "api/products" : $"api/products?s={Url.Encode(search)}";
+        var url = string.IsNullOrWhiteSpace(search)
+            ? "api/products"
+            : $"api/products?s={UrlHelper.Encode(search.Trim())}";
         return await client.GetFromJsonAsync<List<Product>>(url);
     }
-    public async Task<Product?> GetAsync(int id)
+
+    public async Task<Product?> GetAsync(int id) =>
+        await client.GetFromJsonAsync<Product>($"api/products/{id}");
+
+    public async Task<Product?> CreateAsync(ProductFormModel model)
     {
-        return await client.GetFromJsonAsync<Product>($"api/products/{id}");
+        using var response = await client.PostAsJsonAsync("api/products", ProductRequest.CreatePayload(model));
+        return await response.Content.ReadFromJsonAsync<Product>();
     }
-    // El API lee "fileId" en minúsculas: se envía un DTO de escritura (D-01).
-    public async Task PostAsync(Product producto)
+
+    public async Task UpdateAsync(int id, ProductFormModel model)
     {
-        using var response = await client.PostAsJsonAsync("api/products", ProductRequest.Create(producto));
+        using var response = await client.PutAsJsonAsync($"api/products/{id}", ProductRequest.UpdatePayload(model));
     }
-    public async Task PutAsync(Product producto)
-    {
-        using var response = await client.PutAsJsonAsync($"api/products/{producto.ProductId}", ProductRequest.Create(producto));
-    }
+
     public async Task DeleteAsync(int id)
     {
         using var response = await client.DeleteAsync($"api/products/{id}");
     }
-    public async Task PostAsync(int id, int categoryId)
+
+    public async Task AddCategoryAsync(int productId, int categoryId)
     {
-        using var response = await client.PostAsJsonAsync($"api/products/{id}/categories", new { categoryId });
+        using var response = await client.PostAsJsonAsync($"api/products/{productId}/categories", new { categoryId });
     }
-    public async Task DeleteAsync(int id, int categoryId)
+
+    public async Task RemoveCategoryAsync(int productId, int categoryId)
     {
-        using var response = await client.DeleteAsync($"api/products/{id}/categories/{categoryId}");
+        using var response = await client.DeleteAsync($"api/products/{productId}/categories/{categoryId}");
+    }
+
+    public async Task<ProductImageResponse?> UploadImageAsync(int productId, IFormFile image)
+    {
+        var safeFileName = Path.GetFileName(image.FileName);
+        if (string.IsNullOrWhiteSpace(safeFileName))
+            safeFileName = "product.jpg";
+
+        using var memoryStream = new MemoryStream();
+        await image.CopyToAsync(memoryStream);
+
+        using var fileContent = new ByteArrayContent(memoryStream.ToArray());
+        fileContent.Headers.ContentType = MediaTypeHeaderValue.Parse(image.ContentType);
+
+        using var form = new MultipartFormDataContent();
+        form.Add(fileContent, "image", safeFileName);
+
+        using var response = await client.PutAsync($"api/products/{productId}/image", form);
+        return await response.Content.ReadFromJsonAsync<ProductImageResponse>();
+    }
+
+    public async Task DeleteImageAsync(int productId)
+    {
+        using var response = await client.DeleteAsync($"api/products/{productId}/image");
     }
 }

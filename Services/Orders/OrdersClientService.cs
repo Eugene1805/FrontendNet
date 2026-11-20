@@ -1,48 +1,52 @@
 using FrontendNet.Helpers;
 using FrontendNet.Models;
+
 namespace FrontendNet.Services;
 
-/// <summary>Client for orders, checkout quotes, and order transitions.</summary>
+/// <summary>HTTP client for checkout quotes, checkout confirmation, orders, and order transitions.</summary>
 public class OrdersClientService(HttpClient client) : IOrdersService
 {
-    public async Task<Order> CrearAsync(NewOrder nuevo)
+    public async Task<CheckoutQuoteResponse> GetQuoteAsync(string addressId)
     {
-        using var quoteResponse = await client.PostAsJsonAsync("api/checkout/quote", new { addressId = nuevo.AddressId });
-        var quote = await quoteResponse.Content.ReadFromJsonAsync<CheckoutQuote>()
+        using var response = await client.PostAsJsonAsync("api/checkout/quote", new { addressId });
+        return await response.Content.ReadFromJsonAsync<CheckoutQuoteResponse>()
             ?? throw new InvalidOperationException("The checkout quote response was empty.");
-        using var response = await client.PostAsJsonAsync("api/checkout", new { quote = quote.Quote });
-        var result = await response.Content.ReadFromJsonAsync<CheckoutResult>()
-            ?? throw new InvalidOperationException("The checkout response was empty.");
-        return result.Orders.FirstOrDefault()
-            ?? throw new InvalidOperationException("The checkout response contained no order.");
     }
 
-    public async Task<List<OrderSummary>> GetAsync(string? status)
+    public async Task<CheckoutConfirmResponse> ConfirmCheckoutAsync(string quote)
     {
-        var url = "api/orders";
-        return await client.GetFromJsonAsync<List<OrderSummary>>(url) ?? [];
+        using var response = await client.PostAsJsonAsync("api/checkout", new { quote });
+        return await response.Content.ReadFromJsonAsync<CheckoutConfirmResponse>()
+            ?? throw new InvalidOperationException("The checkout confirmation response was empty.");
     }
 
-    public async Task<Order?> GetOrderAsync(string id)
-        => await client.GetFromJsonAsync<Order>($"api/orders/{Url.Encode(id)}");
-
-    public async Task ChangeStatusAsync(string id, string status, string? reason = null)
+    public async Task<List<OrderSummary>> GetAsync(string? status = null)
     {
-        using var response = await client.PutAsJsonAsync($"api/orders/{Url.Encode(id)}/status", new { status, reason });
+        var orders = await client.GetFromJsonAsync<List<OrderSummary>>("api/orders") ?? [];
+        if (string.IsNullOrWhiteSpace(status))
+            return orders;
+
+        return orders
+            .Where(o => string.Equals(o.Status, status.Trim(), StringComparison.OrdinalIgnoreCase))
+            .ToList();
     }
 
-    public Task CancelAsync(string id, string reason)
+    public async Task<Order?> GetOrderAsync(string id) =>
+        await client.GetFromJsonAsync<Order>($"api/orders/{UrlHelper.Encode(id)}");
+
+    public async Task UpdateStatusAsync(string id, string status, string? reason = null)
     {
-        return ChangeStatusAsync(id, OrderStatus.Canceled, reason);
+        var payload = new Dictionary<string, object>
+        {
+            ["status"] = status.Trim().ToUpperInvariant()
+        };
+
+        if (!string.IsNullOrWhiteSpace(reason))
+            payload["reason"] = reason.Trim();
+
+        using var response = await client.PutAsJsonAsync($"api/orders/{UrlHelper.Encode(id)}/status", payload);
     }
-}
 
-public sealed class CheckoutQuote
-{
-    public string Quote { get; set; } = "";
-}
-
-public sealed class CheckoutResult
-{
-    public List<Order> Orders { get; set; } = [];
+    public Task CancelAsync(string id, string reason) =>
+        UpdateStatusAsync(id, OrderStatus.Canceled, reason);
 }

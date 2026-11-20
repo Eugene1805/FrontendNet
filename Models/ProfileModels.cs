@@ -1,42 +1,71 @@
 using System.ComponentModel.DataAnnotations;
+using FrontendNet.Validation;
+
 namespace FrontendNet.Models;
 
-/// <summary>Datos de sesión que se muestran en Perfil (nunca el JWT completo).</summary>
-public class ProfileSession
+/// <summary>Response returned by GET and PUT /api/users/me.</summary>
+public class UserProfile
 {
-    public string Email { get; set; } = "";
-    public string Name { get; set; } = "";
-    public string Profile { get; set; } = "";
-    [System.Text.Json.Serialization.JsonIgnore]
-    public string Role { get => Profile; set => Profile = value; }
-    public DateTimeOffset? ExpiraUtc { get; set; }
-    public string? Emisor { get; set; }
-    public string? Audiencia { get; set; }
+    public string Id { get; set; } = string.Empty;
+    public string Email { get; set; } = string.Empty;
+    public string Name { get; set; } = string.Empty;
+    public string Profile { get; set; } = string.Empty;
+    public string Status { get; set; } = string.Empty;
+    public string? PhoneNumber { get; set; }
+    public string? StoreName { get; set; }
+    public string? SellerStatus { get; set; }
+}
+
+/// <summary>Safe session and profile data displayed on the Profile view (never exposes the raw JWT).</summary>
+public class ProfileSessionViewModel
+{
+    public string Id { get; set; } = string.Empty;
+    public string Email { get; set; } = string.Empty;
+    public string Name { get; set; } = string.Empty;
+    public string Profile { get; set; } = string.Empty;
+    public string Status { get; set; } = string.Empty;
+    public string? PhoneNumber { get; set; }
+    public string? StoreName { get; set; }
+    public string? SellerStatus { get; set; }
+    public DateTimeOffset? ExpiresUtc { get; set; }
+    public string? Issuer { get; set; }
+    public string? Audience { get; set; }
     public string? RemainingTime { get; set; }
 }
 
-public class ProfileName
+public class ProfileEditModel
 {
     [Required(ErrorMessage = "El campo {0} es obligatorio.")]
-    [StringLength(100, ErrorMessage = "El campo {0} admite un máximo de {1} caracteres.")]
+    [StringLength(120, MinimumLength = 1, ErrorMessage = "El campo {0} debe tener entre {2} y {1} caracteres.")]
     [Display(Name = "Nombre")]
-    public string Name { get; set; } = "";
+    public string Name { get; set; } = string.Empty;
+
+    [StringLength(20, ErrorMessage = "El campo {0} admite un máximo de {1} caracteres.")]
+    [RegularExpression(@"^\+?[0-9][0-9 ()-]{5,19}$", ErrorMessage = "Ingrese un número de teléfono válido.")]
+    [Display(Name = "Teléfono (opcional)")]
+    public string? PhoneNumber { get; set; }
+
+    [StringLength(120, MinimumLength = 1, ErrorMessage = "El campo {0} debe tener entre {2} y {1} caracteres.")]
+    [Display(Name = "Nombre de la tienda")]
+    public string? StoreName { get; set; }
 }
 
-public class ChangePassword
+public class ChangePasswordModel
 {
     [Required(ErrorMessage = "El campo {0} es obligatorio.")]
     [DataType(DataType.Password)]
     [Display(Name = "Contraseña actual")]
-    public string CurrentPassword { get; set; } = "";
+    public string CurrentPassword { get; set; } = string.Empty;
+
     [Required(ErrorMessage = "El campo {0} es obligatorio.")]
-    [MinLength(6, ErrorMessage = "El campo {0} debe tener un mínimo de {1} caracteres.")]
+    [SecurePassword]
     [DataType(DataType.Password)]
-    [Display(Name = "Contraseña nueva")]
-    public string NewPassword { get; set; } = "";
+    [Display(Name = "Nueva contraseña")]
+    public string NewPassword { get; set; } = string.Empty;
+
     [Required(ErrorMessage = "El campo {0} es obligatorio.")]
-    [Compare(nameof(NewPassword), ErrorMessage = "La confirmación no coincide con la contraseña nueva.")]
+    [Compare(nameof(NewPassword), ErrorMessage = "La confirmación no coincide con la nueva contraseña.")]
     [DataType(DataType.Password)]
-    [Display(Name = "Confirmar contraseña nueva")]
-    public string Confirmation { get; set; } = "";
+    [Display(Name = "Confirmar nueva contraseña")]
+    public string ConfirmPassword { get; set; } = string.Empty;
 }

@@ -10,10 +10,9 @@
 
 <nav aria-label="breadcrumb">
     <ol class="breadcrumb small">
-        <li class="breadcrumb-item"><a class="text-decoration-none" title="Volver al listado"
-                asp-action="Index">Listado</a></li>
+        <li class="breadcrumb-item"><a class="text-decoration-none" title="Volver al listado" asp-action="Index">Listado</a></li>
         <li class="breadcrumb-item"><a class="text-decoration-none" title="Regresar a las categorías"
-                asp-action="Categorias" asp-route-id="@Model.Product?.ProductId">Categorías</a></li>
+                asp-action="Categories" asp-route-id="@Model.Product?.ProductId">Categorías</a></li>
         <li class="breadcrumb-item active" aria-current="page">@ViewData["SubTitle"]</li>
     </ol>
 </nav>
@@ -24,7 +23,7 @@
 <p class="text-danger">¿Está seguro que desea remover este elemento?</p>
 <p class="text-danger">@ViewData["ErrorMessage"]</p>
 
-<form asp-action="CategoriasRemover" asp-route-id="@Model.Product?.ProductId">
+<form asp-action="RemoveCategory" asp-route-id="@Model.Product?.ProductId" asp-route-categoryId="@Model.CategoryId" method="post">
     <div asp-validation-summary="ModelOnly" class="text-danger"></div>
     <div class="card mt-3">
         <div class="card-body small">
@@ -40,8 +39,8 @@
     </div>
 
     <div class="text-center mt-3">
-        <button id="btnEnviar" type="submit" class="btn btn-sm btn-primary">Remover</button>
-        <a class="btn btn-sm btn-outline-secondary" asp-action="Categorias" asp-route-id="@Model.Product?.ProductId"
+        <button id="submitButton" type="submit" class="btn btn-sm btn-primary">Remover</button>
+        <a class="btn btn-sm btn-outline-secondary" asp-action="Categories" asp-route-id="@Model.Product?.ProductId"
            title="Cancelar">Cancelar</a>
     </div>
 </form>

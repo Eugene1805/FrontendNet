@@ -1,7 +1,7 @@
 namespace FrontendNet.Helpers;
 
-public static class Url
+/// <summary>Encodes route segments and query string values safely.</summary>
+public static class UrlHelper
 {
-    /// <summary>Encode un segmento de ruta o valor de query (D-08).</summary>
-    public static string Encode(string? valor) => Uri.EscapeDataString(valor ?? "");
+    public static string Encode(string? value) => Uri.EscapeDataString(value ?? string.Empty);
 }

@@ -1,34 +1,48 @@
-@model Product
+@model ProductFormModel
 @{
     ViewData["Title"] = "Productos";
     ViewData["SubTitle"] = "Editar";
+    var placeholder = "https://placehold.co/300x450/FFF/999?text=Art%C3%ADculo";
+    var imageSrc = string.IsNullOrWhiteSpace(Model.CurrentImageUrl) ? placeholder : Model.CurrentImageUrl;
 }
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
-    <script src="~/js/producto_portada.js"></script>
+    <script src="~/js/product-image-preview.js" asp-append-version="true"></script>
 }
 
 <nav aria-label="breadcrumb">
     <ol class="breadcrumb small">
-        <li class="breadcrumb-item"><a class="text-decoration-none" title="Volver al listado"
-                asp-action="Index">Listado</a></li>
+        <li class="breadcrumb-item"><a class="text-decoration-none" title="Volver al listado" asp-action="Index">Listado</a></li>
         <li class="breadcrumb-item active" aria-current="page">@ViewData["SubTitle"]</li>
     </ol>
 </nav>
 
 <h2 class="text-center mb-3">@ViewData["Title"] <small class="text-muted fs-5">@ViewData["SubTitle"]</small></h2>
 
-<form asp-action="Editar">
-    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-    <div class="card mt-3">
-        <div class="row g-0">
-            <div class="col-md-4 text-center bg-white pt-3">
-                <img src="@(Model.FileId == null ? "https://placehold.co/300x450/FFF/999?text=Articulo" : $"{ViewBag.Url}/api/files/{Model.FileId}")"
-                     alt="@Model.Title" class="portada img-fluid" data-url="@ViewBag.Url" style="max-height: 300px;">
-            </div>
-            <div class="col-md-8">
+<div class="card mt-3">
+    <div class="row g-0">
+        <div class="col-md-4 text-center p-3 border-end">
+            <img src="@imageSrc" data-default-src="@imageSrc" alt="@Model.Title"
+                 class="product-cover img-fluid img-thumbnail" style="max-height: 300px;">
+
+            <form asp-action="UploadImage" asp-route-id="@Model.ProductId" method="post" enctype="multipart/form-data" class="mt-3 text-start">
+                <label for="Image" class="form-label small">Actualizar imagen (JPEG, PNG o WebP, máx. 2 MB)</label>
+                <input id="Image" name="image" type="file" accept=".jpg,.jpeg,.png,.webp" class="form-control form-control-sm mb-2" />
+                <button type="submit" class="btn btn-sm btn-outline-primary w-100">Subir imagen</button>
+            </form>
+
+            @if (!string.IsNullOrWhiteSpace(Model.CurrentImageUrl))
+            {
+                <form asp-action="DeleteImage" asp-route-id="@Model.ProductId" method="post" class="mt-2">
+                    <button type="submit" class="btn btn-sm btn-outline-danger w-100">Quitar imagen</button>
+                </form>
+            }
+        </div>
+        <div class="col-md-8">
+            <form asp-action="Edit" asp-route-id="@Model.ProductId" method="post">
                 <div class="card-body small">
+                    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
                     <div class="form-floating mb-3">
                         <input asp-for="ProductId" placeholder="Id" readonly class="form-control-plaintext" />
                         <label asp-for="ProductId" class="form-label"></label>
@@ -38,18 +52,23 @@
                         <label asp-for="Title" class="form-label"></label>
                         <span asp-validation-for="Title" class="text-danger"></span>
                     </div>
-                    <div class="form-floating mb-3">
-                        <input asp-for="Price" placeholder="Precio" class="form-control" />
-                        <label asp-for="Price" class="form-label"></label>
-                        <span asp-validation-for="Price" class="text-danger"></span>
-                    </div>
-                    <div class="form-floating mb-3">
-                        <select class="form-select" asp-for="FileId"
-                                asp-items="ViewBag.File">
-                            <option value="">Producto sin portada</option>
-                        </select>
-                        <label asp-for="FileId" class="control-label"></label>
-                        <span asp-validation-for="FileId" class="text-danger"></span>
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <div class="form-floating">
+                                <input asp-for="Price" type="number" step="0.01" min="0"
+                                       value="@Model.Price.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture)"
+                                       placeholder="Precio" class="form-control" />
+                                <label asp-for="Price" class="form-label"></label>
+                                <span asp-validation-for="Price" class="text-danger"></span>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-floating">
+                                <input asp-for="Stock" placeholder="Existencias" class="form-control" />
+                                <label asp-for="Stock" class="form-label"></label>
+                                <span asp-validation-for="Stock" class="text-danger"></span>
+                            </div>
+                        </div>
                     </div>
                     <div class="form-floating mb-3">
                         <textarea asp-for="Description" placeholder="Descripción" class="form-control form-control-sm"
@@ -57,13 +76,12 @@
                         <label asp-for="Description" class="form-label"></label>
                         <span asp-validation-for="Description" class="text-danger"></span>
                     </div>
+                    <div class="text-center mt-3">
+                        <button id="submitButton" type="submit" class="btn btn-sm btn-primary">Guardar cambios</button>
+                        <a class="btn btn-sm btn-outline-secondary" asp-action="Index" title="Cancelar">Cancelar</a>
+                    </div>
                 </div>
-            </div>
+            </form>
         </div>
     </div>
-
-    <div class="text-center mt-3">
-        <button id="btnEnviar" type="submit" class="btn btn-sm btn-primary">Guardar</button>
-        <a class="btn btn-sm btn-outline-secondary" asp-action="Index" title="Cancelar">Cancelar</a>
-    </div>
-</form>
+</div>

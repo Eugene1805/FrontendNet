@@ -1,4 +1,4 @@
-@model ProfileSession
+@model ProfileSessionViewModel
 @{
     ViewData["Title"] = "Perfil de usuario";
     ViewData["SubTitle"] = "Perfil";
@@ -23,35 +23,59 @@
             <div class="form-text text-body">@Model.Name</div>
         </div>
         <div class="mb-3 ps-3">
-            <label class="form-label form-text">Rol</label>
-            <div class="form-text text-body">@Model.Role</div>
+            <label class="form-label form-text">Teléfono</label>
+            <div class="form-text text-body">@(string.IsNullOrWhiteSpace(Model.PhoneNumber) ? "No registrado" : Model.PhoneNumber)</div>
         </div>
         <div class="mb-3 ps-3">
-            <label class="form-label form-text">Tiempo restante de la sesión</label>
-            <div class="form-text text-body">@(Model.RemainingTime ?? "No disponible")</div>
+            <label class="form-label form-text">Perfil</label>
+            <div class="form-text text-body">@DisplayFormatter.ProfileLabel(Model.Profile)</div>
         </div>
-        @if (Model.ExpiraUtc is { } expira)
+        <div class="mb-3 ps-3">
+            <label class="form-label form-text">Estado de la cuenta</label>
+            <div class="form-text text-body">
+                <span class="badge @DisplayFormatter.UserStatusBadgeClass(Model.Status)">@DisplayFormatter.UserStatusLabel(Model.Status)</span>
+            </div>
+        </div>
+        @if (string.Equals(Model.Profile, Roles.Seller, StringComparison.OrdinalIgnoreCase))
         {
             <div class="mb-3 ps-3">
-                <label class="form-label form-text">La sesión expira</label>
-                <div class="form-text text-body">@expira.ToLocalTime().ToString("G")</div>
+                <label class="form-label form-text">Nombre de la tienda</label>
+                <div class="form-text text-body">@(string.IsNullOrWhiteSpace(Model.StoreName) ? "No registrado" : Model.StoreName)</div>
+            </div>
+            <div class="mb-3 ps-3">
+                <label class="form-label form-text">Estado de vendedor</label>
+                <div class="form-text text-body">
+                    <span class="badge @DisplayFormatter.SellerStatusBadgeClass(Model.SellerStatus)">@DisplayFormatter.SellerStatusLabel(Model.SellerStatus)</span>
+                </div>
             </div>
         }
-        @if (Model.Emisor != null || Model.Audiencia != null)
+        <div class="mb-3 ps-3">
+            <label class="form-label form-text">Tiempo restante del token de acceso</label>
+            <div class="form-text text-body">@(Model.RemainingTime ?? "No disponible")</div>
+        </div>
+        @if (Model.ExpiresUtc is { } expiresUtc)
+        {
+            <div class="mb-3 ps-3">
+                <label class="form-label form-text">El token de acceso expira</label>
+                <div class="form-text text-body">@DisplayFormatter.FormatLocalDateTime(expiresUtc)</div>
+            </div>
+        }
+        @if (Model.Issuer != null || Model.Audience != null)
         {
             <div class="mb-3 ps-3">
                 <label class="form-label form-text">Token emitido por / para</label>
-                <div class="form-text text-body">@Model.Emisor / @Model.Audiencia</div>
+                <div class="form-text text-body">@Model.Issuer / @Model.Audience</div>
             </div>
         }
         <p class="ps-3 form-text mb-0">Por seguridad, el token de sesión (JWT) no se muestra en pantalla.</p>
     </div>
 </div>
 
-@if (ViewBag.Editable == true)
-{
-    <div class="text-center mt-3">
-        <a class="btn btn-sm btn-outline-primary" asp-action="Editar">Editar nombre</a>
-        <a class="btn btn-sm btn-outline-primary" asp-action="CambiarPassword">Cambiar contraseña</a>
-    </div>
-}
+<div class="text-center mt-3 d-flex justify-content-center gap-2 flex-wrap">
+    <a class="btn btn-sm btn-outline-primary" asp-action="Edit">Editar perfil</a>
+    <a class="btn btn-sm btn-outline-primary" asp-action="ChangePassword">Cambiar contraseña</a>
+    @if (User.IsInRole(Roles.Buyer))
+    {
+        <a class="btn btn-sm btn-outline-secondary" asp-controller="Addresses" asp-action="Index">Mis direcciones</a>
+    }
+</div>

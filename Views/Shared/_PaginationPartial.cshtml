@@ -1,26 +1,26 @@
-@* Usa ViewBag.Pagina / ViewBag.TotalPaginas (los publica AppController.Pagina) y conserva el resto de la query string. *@
+@* Uses ViewBag.Page and ViewBag.TotalPages published by AppController.Paginate while preserving existing query parameters. *@
 @{
-    int pagina = ViewBag.Pagina ?? 1;
-    int total = ViewBag.TotalPaginas ?? 1;
-    string Enlace(int p)
+    int currentPage = ViewBag.Page ?? 1;
+    int totalPages = ViewBag.TotalPages ?? 1;
+    string BuildPageUrl(int targetPage)
     {
         var query = Context.Request.Query
-            .Where(q => !string.Equals(q.Key, "pagina", StringComparison.OrdinalIgnoreCase))
+            .Where(q => !string.Equals(q.Key, "page", StringComparison.OrdinalIgnoreCase))
             .ToDictionary(q => q.Key, q => q.Value.ToString());
-        query["pagina"] = p.ToString();
+        query["page"] = targetPage.ToString();
         return Context.Request.Path + QueryString.Create(query!).ToUriComponent();
     }
 }
-@if (total > 1)
+@if (totalPages > 1)
 {
     <nav aria-label="Paginación">
         <ul class="pagination pagination-sm justify-content-center">
-            <li class="page-item @(pagina <= 1 ? "disabled" : "")">
-                <a class="page-link" href="@Enlace(Math.Max(1, pagina - 1))">Anterior</a>
+            <li class="page-item @(currentPage <= 1 ? "disabled" : "")">
+                <a class="page-link" href="@BuildPageUrl(Math.Max(1, currentPage - 1))">Anterior</a>
             </li>
-            <li class="page-item disabled"><span class="page-link">Página @pagina de @total</span></li>
-            <li class="page-item @(pagina >= total ? "disabled" : "")">
-                <a class="page-link" href="@Enlace(Math.Min(total, pagina + 1))">Siguiente</a>
+            <li class="page-item disabled"><span class="page-link">Página @currentPage de @totalPages</span></li>
+            <li class="page-item @(currentPage >= totalPages ? "disabled" : "")">
+                <a class="page-link" href="@BuildPageUrl(Math.Min(totalPages, currentPage + 1))">Siguiente</a>
             </li>
         </ul>
     </nav>

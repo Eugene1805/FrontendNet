@@ -4,8 +4,7 @@ using System.Text.Json.Serialization;
 namespace FrontendNet.Helpers;
 
 /// <summary>
-/// Read booleanos que el API envía como 0/1 (columnas BOOLEAN de MySQL consultadas con raw:true,
-/// p. ej. "protegido" en /api/users) además de true/false.
+/// Deserializes booleans represented as JSON booleans, integers (0/1), or strings ("1"/"true").
 /// </summary>
 public class NumericBooleanConverter : JsonConverter<bool>
 {
@@ -15,8 +14,9 @@ public class NumericBooleanConverter : JsonConverter<bool>
         JsonTokenType.False => false,
         JsonTokenType.Number => reader.GetInt32() != 0,
         JsonTokenType.String => reader.GetString() is "1" or "true" or "True",
-        _ => throw new JsonException("Valor booleano no válido.")
+        _ => throw new JsonException("Invalid boolean value.")
     };
 
-    public override void Write(Utf8JsonWriter writer, bool value, JsonSerializerOptions options) => writer.WriteBooleanValue(value);
+    public override void Write(Utf8JsonWriter writer, bool value, JsonSerializerOptions options) =>
+        writer.WriteBooleanValue(value);
 }

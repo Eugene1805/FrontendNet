@@ -2,26 +2,21 @@
 
 <div class="row small mb-3">
     <div class="col">
-        <a class="text-decoration-none" asp-action="CategoriasAgregar" asp-route-id='@ViewData["ProductoId"]'
-           title="Agregar">Agregar</a>
+        <a class="text-decoration-none" asp-action="AddCategory" asp-route-id='@ViewData["ProductId"]' title="Agregar">Agregar</a>
     </div>
     <div class="col text-end">
-        Mostrando @Model.Count() elementos
+        Mostrando @Model.Count elementos
     </div>
 </div>
 
-@if (Model.Count() > 0)
+@if (Model.Count > 0)
 {
     <div class="table-responsive">
         <table class="table table-striped table-bordered small">
             <thead class="text-center">
                 <tr>
-                    <th>
-                        @Html.DisplayNameFor(model => model.First().CategoryId)
-                    </th>
-                    <th>
-                        @Html.DisplayNameFor(model => model.First().Name)
-                    </th>
+                    <th>@Html.DisplayNameFor(model => model.First().CategoryId)</th>
+                    <th>@Html.DisplayNameFor(model => model.First().Name)</th>
                     <th></th>
                 </tr>
             </thead>
@@ -29,15 +24,11 @@
                 @foreach (var item in Model)
                 {
                     <tr>
-                        <td>
-                            @Html.DisplayFor(modelItem => item.CategoryId)
-                        </td>
-                        <td>
-                            @Html.DisplayFor(modelItem => item.Name)
-                        </td>
+                        <td>@Html.DisplayFor(modelItem => item.CategoryId)</td>
+                        <td>@Html.DisplayFor(modelItem => item.Name)</td>
                         <td width="1">
-                            <a class="text-decoration-none small text-uppercase" asp-action="CategoriasRemover"
-                               asp-route-id='@ViewData["ProductoId"]' asp-route-categoryId="@item.CategoryId">Eliminar</a>
+                            <a class="text-decoration-none small text-uppercase" asp-action="RemoveCategory"
+                               asp-route-id='@ViewData["ProductId"]' asp-route-categoryId="@item.CategoryId">Eliminar</a>
                         </td>
                     </tr>
                 }

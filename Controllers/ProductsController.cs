@@ -1,3 +1,4 @@
+using FrontendNet.Helpers;
 using FrontendNet.Models;
 using FrontendNet.Services;
 using Microsoft.AspNetCore.Authorization;
@@ -6,243 +7,423 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace FrontendNet;
 
-[Authorize(Roles = "ADMIN,Administrador,SELLER,Vendedor")]
-public class ProductsController(ProductClientService products,
+[Authorize(Roles = $"{Roles.Seller},{Roles.Admin}")]
+public class ProductsController(
+    ProductClientService products,
     CategoryClientService categories,
-    FilesClientService files) : AppController
+    IConfiguration configuration) : AppController
 {
     public async Task<IActionResult> Index(string? s, int page = 1)
     {
+        if (IsUnapprovedSeller())
+            return View("SellerPending");
+
+        var search = s?.Trim();
+        if (search?.Length > 255)
+        {
+            TempData["Error"] = "La búsqueda admite un máximo de 255 caracteres.";
+            search = search[..255];
+        }
+
         try
         {
-            var items = await products.GetAsync(s) ?? [];
-            ViewBag.SoloAdmin = true;
-            ViewBag.search = s;
+            var items = await products.GetAsync(search) ?? [];
+            if (User.IsInRole(Roles.Seller))
+            {
+                var currentUserId = GetCurrentUserId();
+                items = items
+                    .Where(p => string.Equals(p.SellerId, currentUserId, StringComparison.OrdinalIgnoreCase))
+                    .ToList();
+            }
+
+            ViewBag.CanManage = User.IsInRole(Roles.Seller);
+            ViewBag.Search = search;
             return View("Index", Paginate(items, page));
         }
         catch (Exception ex) when (IsApiError(ex))
         {
-            return ErrorGet(ex);
+            return await HandleGetErrorAsync(ex);
         }
     }
 
-    [ActionName("Detalle")]
     public async Task<IActionResult> Details(int id)
     {
+        if (IsUnapprovedSeller())
+            return View("SellerPending");
+
         try
         {
             var item = await products.GetAsync(id);
-            if (item == null) return NotFound();
+            if (item is null) return NotFound();
+
+            ViewBag.CanManage = User.IsInRole(Roles.Seller) && IsOwner(item);
             return View("Details", item);
         }
         catch (Exception ex) when (IsApiError(ex))
         {
-            return ErrorGet(ex);
+            return await HandleGetErrorAsync(ex);
         }
     }
 
-    [ActionName("Crear")]
+    [Authorize(Roles = Roles.Seller)]
     public async Task<IActionResult> Create()
     {
-        await ProductosDropDownListAsync();
-        return View("Create");
+        if (IsUnapprovedSeller())
+            return View("SellerPending");
+
+        await PopulateCategoriesDropDownAsync();
+        return View("Create", new ProductFormModel());
     }
 
     [HttpPost]
-    [ActionName("Crear")]
-    public async Task<IActionResult> CreateAsync(Product itemToCreate)
+    [Authorize(Roles = Roles.Seller)]
+    public async Task<IActionResult> CreateAsync(ProductFormModel model)
     {
+        if (IsUnapprovedSeller())
+            return View("SellerPending");
+
+        if (model.Image is not null)
+        {
+            var imageError = ImageUploadValidator.Validate(model.Image, configuration);
+            if (imageError is not null)
+                ModelState.AddModelError(nameof(model.Image), imageError);
+        }
+
         if (ModelState.IsValid)
         {
             try
             {
-                await products.PostAsync(itemToCreate);
+                var created = await products.CreateAsync(model);
+                if (created?.ProductId is { } newProductId && model.Image is not null)
+                {
+                    try
+                    {
+                        await products.UploadImageAsync(newProductId, model.Image);
+                        TempData["Success"] = "Producto e imagen guardados correctamente.";
+                    }
+                    catch (Exception imgEx) when (IsApiError(imgEx))
+                    {
+                        TempData["Error"] =
+                            $"El producto se creó correctamente, pero no se pudo subir la imagen: {GetUserMessage(imgEx)}";
+                        return RedirectToAction(nameof(Edit), new { id = newProductId });
+                    }
+                }
+                else
+                {
+                    TempData["Success"] = "Producto creado correctamente.";
+                }
+
                 return RedirectToAction(nameof(Index));
             }
             catch (Exception ex) when (IsApiError(ex))
             {
-                var result = HandleApiError(ex);
-                if (result != null) return result;
+                var result = await HandleApiErrorAsync(ex);
+                if (result is not null) return result;
             }
         }
-        await ProductosDropDownListAsync(itemToCreate.FileId);
-        return View("Create", itemToCreate);
+
+        await PopulateCategoriesDropDownAsync(model.CategoryId);
+        return View("Create", model);
     }
 
-    [ActionName("Editar")]
-    public async Task<IActionResult> EditAsync(int id)
+    [Authorize(Roles = Roles.Seller)]
+    public async Task<IActionResult> Edit(int id)
     {
+        if (IsUnapprovedSeller())
+            return View("SellerPending");
+
         try
         {
-            var itemToEdit = await products.GetAsync(id);
-            if (itemToEdit == null) return NotFound();
-            await ProductosDropDownListAsync(itemToEdit.FileId);
-            return View("Edit", itemToEdit);
+            var item = await products.GetAsync(id);
+            if (item is null) return NotFound();
+            if (!IsOwner(item)) return Forbid();
+
+            return View("Edit", ProductFormModel.FromProduct(item));
         }
         catch (Exception ex) when (IsApiError(ex))
         {
-            return ErrorGet(ex);
+            return await HandleGetErrorAsync(ex);
         }
     }
 
     [HttpPost]
-    [ActionName("Editar")]
-    public async Task<IActionResult> EditAsync(int id, Product itemToEdit)
+    [Authorize(Roles = Roles.Seller)]
+    public async Task<IActionResult> EditAsync(int id, ProductFormModel model)
     {
-        if (id != itemToEdit.ProductId) return NotFound();
+        if (IsUnapprovedSeller())
+            return View("SellerPending");
+
+        if (id != model.ProductId) return NotFound();
+
         if (ModelState.IsValid)
         {
             try
             {
-                await products.PutAsync(itemToEdit);
+                await products.UpdateAsync(id, model);
+                TempData["Success"] = "Producto actualizado correctamente.";
                 return RedirectToAction(nameof(Index));
             }
             catch (Exception ex) when (IsApiError(ex))
             {
-                var result = HandleApiError(ex);
-                if (result != null) return result;
+                var result = await HandleApiErrorAsync(ex);
+                if (result is not null) return result;
             }
         }
-        await ProductosDropDownListAsync(itemToEdit.FileId);
-        return View("Edit", itemToEdit);
+
+        try
+        {
+            var current = await products.GetAsync(id);
+            if (current is not null)
+                model.CurrentImageUrl = current.ImageUrl;
+        }
+        catch (Exception ex) when (IsApiError(ex))
+        {
+            // Keep existing form model if secondary lookup fails.
+        }
+
+        return View("Edit", model);
     }
 
-    [ActionName("Eliminar")]
+    [HttpPost]
+    [Authorize(Roles = Roles.Seller)]
+    public async Task<IActionResult> UploadImageAsync(int id, IFormFile? image)
+    {
+        if (IsUnapprovedSeller())
+            return View("SellerPending");
+
+        var validationError = ImageUploadValidator.Validate(image, configuration);
+        if (validationError is not null)
+        {
+            TempData["Error"] = validationError;
+            return RedirectToAction(nameof(Edit), new { id });
+        }
+
+        try
+        {
+            await products.UploadImageAsync(id, image!);
+            TempData["Success"] = "Imagen del producto actualizada correctamente.";
+        }
+        catch (Exception ex) when (IsApiError(ex))
+        {
+            var result = await HandleApiErrorAsync(ex);
+            if (result is not null) return result;
+            TempData["Error"] = GetUserMessage(ex);
+        }
+
+        return RedirectToAction(nameof(Edit), new { id });
+    }
+
+    [HttpPost]
+    [Authorize(Roles = Roles.Seller)]
+    public async Task<IActionResult> DeleteImageAsync(int id)
+    {
+        if (IsUnapprovedSeller())
+            return View("SellerPending");
+
+        try
+        {
+            await products.DeleteImageAsync(id);
+            TempData["Success"] = "Imagen del producto eliminada correctamente.";
+        }
+        catch (Exception ex) when (IsApiError(ex))
+        {
+            var result = await HandleApiErrorAsync(ex);
+            if (result is not null) return result;
+            TempData["Error"] = GetUserMessage(ex);
+        }
+
+        return RedirectToAction(nameof(Edit), new { id });
+    }
+
+    [Authorize(Roles = Roles.Seller)]
     public async Task<IActionResult> Delete(int id, string? error = null)
     {
+        if (IsUnapprovedSeller())
+            return View("SellerPending");
+
         try
         {
-            var itemToDelete = await products.GetAsync(id);
-            if (itemToDelete == null) return NotFound();
+            var item = await products.GetAsync(id);
+            if (item is null) return NotFound();
+            if (!IsOwner(item)) return Forbid();
+
             ViewData["ErrorMessage"] = error;
-            return View("Delete", itemToDelete);
+            return View("Delete", item);
         }
         catch (Exception ex) when (IsApiError(ex))
         {
-            return ErrorGet(ex);
+            return await HandleGetErrorAsync(ex);
         }
     }
 
     [HttpPost]
-    [ActionName("Eliminar")]
-    public async Task<IActionResult> Delete(int id)
+    [ActionName("Delete")]
+    [Authorize(Roles = Roles.Seller)]
+    public async Task<IActionResult> DeleteConfirmedAsync(int id)
     {
+        if (IsUnapprovedSeller())
+            return View("SellerPending");
+
         try
         {
             await products.DeleteAsync(id);
+            TempData["Success"] = "Producto eliminado correctamente.";
             return RedirectToAction(nameof(Index));
         }
         catch (Exception ex) when (IsApiError(ex))
         {
-            return HandleApiError(ex) is { } result
-                ? result
-                : RedirectToAction("Eliminar", new { id, error = GetMessageFor(ex) });
+            var result = await HandleApiErrorAsync(ex);
+            if (result is not null) return result;
+            return RedirectToAction(nameof(Delete), new { id, error = GetUserMessage(ex) });
         }
     }
 
-    [ActionName("Categorias")]
+    [Authorize(Roles = Roles.Seller)]
     public async Task<IActionResult> Categories(int id)
     {
+        if (IsUnapprovedSeller())
+            return View("SellerPending");
+
         try
         {
-            var itemToView = await products.GetAsync(id);
-            if (itemToView == null) return NotFound();
-            ViewData["ProductoId"] = itemToView.ProductId;
-            return View("Categories", itemToView);
+            var item = await products.GetAsync(id);
+            if (item is null) return NotFound();
+            if (!IsOwner(item)) return Forbid();
+
+            ViewData["ProductId"] = item.ProductId;
+            return View("Categories", item);
         }
         catch (Exception ex) when (IsApiError(ex))
         {
-            return ErrorGet(ex);
+            return await HandleGetErrorAsync(ex);
         }
     }
 
-    [ActionName("CategoriasAgregar")]
+    [Authorize(Roles = Roles.Seller)]
     public async Task<IActionResult> AddCategory(int id)
     {
+        if (IsUnapprovedSeller())
+            return View("SellerPending");
+
         try
         {
-            Product? producto = await products.GetAsync(id);
-            if (producto == null) return NotFound();
-            await CategoriasDropDownListAsync();
-            return View("AddCategory", new ProductCategory { Product = producto });
+            var product = await products.GetAsync(id);
+            if (product is null) return NotFound();
+            if (!IsOwner(product)) return Forbid();
+
+            await PopulateCategoriesDropDownAsync();
+            return View("AddCategory", new ProductCategory { Product = product });
         }
         catch (Exception ex) when (IsApiError(ex))
         {
-            return ErrorGet(ex);
+            return await HandleGetErrorAsync(ex);
         }
     }
 
     [HttpPost]
-    [ActionName("CategoriasAgregar")]
-    public async Task<IActionResult> AddCategory(int id, int categoryId)
+    [Authorize(Roles = Roles.Seller)]
+    public async Task<IActionResult> AddCategoryAsync(int id, int? categoryId)
     {
-        Product? producto = null;
+        if (IsUnapprovedSeller())
+            return View("SellerPending");
+
+        Product? product = null;
         try
         {
-            producto = await products.GetAsync(id);
-            if (producto == null) return NotFound();
-            Category? categoria = await categories.GetAsync(categoryId);
-            if (categoria == null) return NotFound();
-            await products.PostAsync(id, categoryId);
-            return RedirectToAction("Categorias", new { id });
+            product = await products.GetAsync(id);
+            if (product is null) return NotFound();
+            if (!IsOwner(product)) return Forbid();
+
+            if (categoryId is not > 0)
+            {
+                ModelState.AddModelError(nameof(ProductCategory.CategoryId), "Seleccione una categoría.");
+            }
+            else
+            {
+                var category = await categories.GetAsync(categoryId.Value);
+                if (category is null) return NotFound();
+
+                await products.AddCategoryAsync(id, categoryId.Value);
+                TempData["Success"] = "Categoría agregada al producto.";
+                return RedirectToAction(nameof(Categories), new { id });
+            }
         }
         catch (Exception ex) when (IsApiError(ex))
         {
-            var result = HandleApiError(ex, "id");
-            if (result != null) return result;
+            var result = await HandleApiErrorAsync(ex, nameof(ProductCategory.CategoryId));
+            if (result is not null) return result;
         }
-        await CategoriasDropDownListAsync();
-        return View("AddCategory", new ProductCategory { Product = producto });
+
+        await PopulateCategoriesDropDownAsync(categoryId);
+        return View("AddCategory", new ProductCategory { Product = product, CategoryId = categoryId });
     }
 
-    [ActionName("CategoriasRemover")]
+    [Authorize(Roles = Roles.Seller)]
     public async Task<IActionResult> RemoveCategory(int id, int categoryId, string? error = null)
     {
+        if (IsUnapprovedSeller())
+            return View("SellerPending");
+
         try
         {
-            Product? producto = await products.GetAsync(id);
-            if (producto == null) return NotFound();
-            Category? categoria = await categories.GetAsync(categoryId);
-            if (categoria == null) return NotFound();
+            var product = await products.GetAsync(id);
+            if (product is null) return NotFound();
+            if (!IsOwner(product)) return Forbid();
+
+            var category = await categories.GetAsync(categoryId);
+            if (category is null) return NotFound();
+
             ViewData["ErrorMessage"] = error;
-            return View("RemoveCategory", new ProductCategory { Product = producto, CategoryId = categoryId, Name = categoria.Name });
+            return View("RemoveCategory", new ProductCategory
+            {
+                Product = product,
+                CategoryId = categoryId,
+                Name = category.Name
+            });
         }
         catch (Exception ex) when (IsApiError(ex))
         {
-            return ErrorGet(ex);
+            return await HandleGetErrorAsync(ex);
         }
     }
 
     [HttpPost]
-    [ActionName("CategoriasRemover")]
-    public async Task<IActionResult> RemoveCategory(int id, int categoryId)
+    [ActionName("RemoveCategory")]
+    [Authorize(Roles = Roles.Seller)]
+    public async Task<IActionResult> RemoveCategoryConfirmedAsync(int id, int categoryId)
     {
+        if (IsUnapprovedSeller())
+            return View("SellerPending");
+
         try
         {
-            await products.DeleteAsync(id, categoryId);
-            return RedirectToAction("Categorias", new { id });
+            await products.RemoveCategoryAsync(id, categoryId);
+            TempData["Success"] = "Categoría removida del producto.";
+            return RedirectToAction(nameof(Categories), new { id });
         }
         catch (Exception ex) when (IsApiError(ex))
         {
-            return HandleApiError(ex) is { } result
-                ? result
-                : RedirectToAction("CategoriasRemover", new { id, categoryId, error = GetMessageFor(ex) });
+            var result = await HandleApiErrorAsync(ex);
+            if (result is not null) return result;
+            return RedirectToAction(nameof(RemoveCategory), new { id, categoryId, error = GetUserMessage(ex) });
         }
     }
 
-    private async Task CategoriasDropDownListAsync(object? itemSeleccionado = null)
+    private bool IsOwner(Product product) =>
+        string.Equals(product.SellerId, GetCurrentUserId(), StringComparison.OrdinalIgnoreCase);
+
+    private async Task PopulateCategoriesDropDownAsync(object? selectedCategory = null)
     {
         List<Category> items = [];
-        try { items = await categories.GetAsync() ?? []; }
-        catch (Exception ex) when (IsApiError(ex)) { ModelState.AddModelError("", GetMessageFor(ex)); }
-        ViewBag.Category = new SelectList(items, "CategoryId", "Name", itemSeleccionado);
-    }
+        try
+        {
+            items = await categories.GetAsync() ?? [];
+        }
+        catch (Exception ex) when (IsApiError(ex))
+        {
+            ModelState.AddModelError(string.Empty, GetUserMessage(ex));
+        }
 
-    private async Task ProductosDropDownListAsync(object? itemSeleccionado = null)
-    {
-        List<FileRecord> items = [];
-        try { items = await files.GetAsync() ?? []; }
-        catch (Exception ex) when (IsApiError(ex)) { ModelState.AddModelError("", GetMessageFor(ex)); }
-        ViewBag.FileRecord = new SelectList(items, "FileId", "Name", itemSeleccionado);
+        ViewBag.Categories = new SelectList(items, "CategoryId", "Name", selectedCategory);
     }
 }

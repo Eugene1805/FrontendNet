@@ -1,11 +1,6 @@
-@model NewOrder
+@model CheckoutViewModel
 @{
     ViewData["Title"] = "Confirmar compra";
-    ShoppingCart carrito = ViewBag.ShoppingCart;
-}
-
-@section Scripts {
-    <partial name="_ValidationScriptsPartial" />
 }
 
 <nav aria-label="breadcrumb">
@@ -19,38 +14,95 @@
 
 <div class="card mt-3">
     <div class="card-body small">
-        <h5 class="card-title">Resumen del pedido</h5>
-        <table class="table table-sm align-middle">
-            <tbody>
-                @foreach (var item in carrito.Items)
+        <div class="d-flex justify-content-between align-items-center mb-2">
+            <h5 class="card-title mb-0">1. Dirección de envío</h5>
+            <a class="btn btn-sm btn-outline-primary" asp-controller="Addresses" asp-action="Create"
+               asp-route-returnUrl="/Orders/Checkout">Agregar dirección</a>
+        </div>
+
+        @if (Model.Addresses.Count > 0)
+        {
+            <div class="list-group">
+                @foreach (var addr in Model.Addresses)
                 {
-                    <tr>
-                        <td>@item.Title × @item.Quantity</td>
-                        <td class="text-end">@item.Subtotal</td>
-                    </tr>
+                    var isSelected = string.Equals(addr.Id, Model.SelectedAddressId, StringComparison.Ordinal);
+                    <a asp-action="Checkout" asp-route-addressId="@addr.Id"
+                       class="list-group-item list-group-item-action @(isSelected ? "active" : "")">
+                        <div class="d-flex justify-content-between">
+                            <strong>@(string.IsNullOrWhiteSpace(addr.Label) ? addr.RecipientName : addr.Label)</strong>
+                            @if (addr.IsDefault)
+                            {
+                                <span class="badge @(isSelected ? "text-bg-light" : "text-bg-secondary")">Predeterminada</span>
+                            }
+                        </div>
+                        <div class="small">@addr.FormatSingleLine()</div>
+                    </a>
                 }
-            </tbody>
-            <tfoot>
-                <tr><th>Total</th><th class="text-end">@carrito.Subtotal</th></tr>
-            </tfoot>
-        </table>
-        <p class="text-muted mb-0">Los precios se calculan en el servidor al confirmar. Método de pago: simulado.</p>
+            </div>
+        }
+        else
+        {
+            <div class="alert alert-warning mb-0" role="alert">
+                No tienes direcciones de envío guardadas. Agrega una dirección para cotizar y confirmar tu compra.
+            </div>
+        }
     </div>
 </div>
 
-<form asp-action="Checkout">
-    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+@if (!string.IsNullOrWhiteSpace(Model.QuoteError))
+{
+    <div class="alert alert-danger mt-3 small" role="alert">@Model.QuoteError</div>
+}
+
+@if (Model.Quote is { } quote)
+{
+    var grandTotal = quote.Orders.Sum(o => o.TotalValue);
     <div class="card mt-3">
         <div class="card-body small">
-            <div class="form-floating mb-3">
-                <textarea asp-for="DireccionEnvio" placeholder="Dirección de envío" class="form-control" style="height: 100px"></textarea>
-                <label asp-for="DireccionEnvio" class="form-label"></label>
-                <span asp-validation-for="DireccionEnvio" class="text-danger"></span>
+            <h5 class="card-title">2. Cotización del pedido</h5>
+            <p class="text-muted">
+                Los precios y existencias se validaron en el servidor. Esta cotización vence en @(Math.Max(1, quote.ExpiresIn / 60)) minutos.
+            </p>
+            @foreach (var quotedOrder in quote.Orders)
+            {
+                <div class="border rounded p-2 mb-3">
+                    <div class="fw-semibold mb-2">Pedido para vendedor: @quotedOrder.SellerId</div>
+                    <table class="table table-sm align-middle mb-0">
+                        <tbody>
+                            @foreach (var item in quotedOrder.Items)
+                            {
+                                <tr>
+                                    <td>@item.Title × @item.Quantity</td>
+                                    <td class="text-end">@DisplayFormatter.FormatCurrency(item.SubtotalValue)</td>
+                                </tr>
+                            }
+                        </tbody>
+                        <tfoot>
+                            <tr>
+                                <th>Subtotal del vendedor</th>
+                                <th class="text-end">@DisplayFormatter.FormatCurrency(quotedOrder.Total)</th>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            }
+            <div class="d-flex justify-content-between fw-bold fs-6 border-top pt-2">
+                <span>Total general</span>
+                <span>@DisplayFormatter.FormatCurrency(grandTotal)</span>
             </div>
         </div>
     </div>
-    <div class="text-center mt-3">
-        <button id="btnEnviar" type="submit" class="btn btn-sm btn-primary">Confirmar pedido</button>
+
+    <form asp-action="ConfirmCheckout" method="post" class="text-center mt-3">
+        <input type="hidden" name="quote" value="@quote.Quote" />
+        <input type="hidden" name="addressId" value="@Model.SelectedAddressId" />
+        <button id="submitButton" type="submit" class="btn btn-sm btn-primary">Confirmar pedido</button>
         <a class="btn btn-sm btn-outline-secondary" asp-controller="ShoppingCart" asp-action="Index">Cancelar</a>
+    </form>
+}
+else
+{
+    <div class="text-center mt-3">
+        <a class="btn btn-sm btn-outline-secondary" asp-controller="ShoppingCart" asp-action="Index">Volver al carrito</a>
     </div>
-</form>
+}

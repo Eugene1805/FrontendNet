@@ -1,0 +1,12 @@
+{
+  "Logging": {
+    "LogLevel": {
+      "Default": "Information",
+      "Microsoft.AspNetCore": "Warning"
+    }
+  },
+  "ApiBaseUrl": "http://localhost:3000",
+  "Security": {
+    "RequireHttps": false
+  }
+}

@@ -10,8 +10,7 @@
 
 <nav aria-label="breadcrumb">
     <ol class="breadcrumb small">
-        <li class="breadcrumb-item"><a class="text-decoration-none" title="Volver al listado"
-                asp-action="Index">Listado</a></li>
+        <li class="breadcrumb-item"><a class="text-decoration-none" title="Volver al listado" asp-action="Index">Listado</a></li>
         <li class="breadcrumb-item active" aria-current="page">@ViewData["SubTitle"]</li>
     </ol>
 </nav>
@@ -21,7 +20,7 @@
 <h4 class="my-3">Categorías</h4>
 @if (Model.Categories != null)
 {
-    <partial name="_CategoryListPartial" model="Model.Categories" />
+    <partial name="_CategoryListPartial" model="Model.Categories.ToList()" />
 }
 <div class="text-center mt-3">
     <a class="btn btn-sm btn-outline-secondary" asp-action="Index" title="Volver">Volver</a>

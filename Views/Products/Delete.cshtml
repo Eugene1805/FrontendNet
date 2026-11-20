@@ -6,8 +6,7 @@
 
 <nav aria-label="breadcrumb">
     <ol class="breadcrumb small">
-        <li class="breadcrumb-item"><a class="text-decoration-none" title="Volver al listado"
-                asp-action="Index">Listado</a></li>
+        <li class="breadcrumb-item"><a class="text-decoration-none" title="Volver al listado" asp-action="Index">Listado</a></li>
         <li class="breadcrumb-item active" aria-current="page">@ViewData["SubTitle"]</li>
     </ol>
 </nav>
@@ -18,9 +17,9 @@
 <p class="text-danger">@ViewData["ErrorMessage"]</p>
 
 <partial name="_CardPartial" model="Model" />
-<form asp-action="Eliminar">
+<form asp-action="Delete" asp-route-id="@Model.ProductId" method="post">
     <div class="text-center mt-3">
-        <button id="btnEnviar" type="submit" class="btn btn-sm btn-primary">Eliminar</button>
+        <button id="submitButton" type="submit" class="btn btn-sm btn-primary">Eliminar</button>
         <a class="btn btn-sm btn-outline-secondary" asp-action="Index" title="Cancelar">Cancelar</a>
     </div>
 </form>

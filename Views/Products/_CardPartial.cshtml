@@ -1,11 +1,14 @@
 @model Product
+@{
+    var imageSrc = string.IsNullOrWhiteSpace(Model.ImageUrl)
+        ? "https://placehold.co/300x450/FFF/999?text=Art%C3%ADculo"
+        : Model.ImageUrl;
+}
 
 <div class="card mt-3">
     <div class="row g-0">
         <div class="col-md-4 text-center bg-white pt-3">
-            <img src="@(Model.FileId == null ? "https://placehold.co/300x450/FFF/999?text=Articulo" : $"{ViewBag.Url}/api/files/{Model.FileId}")"
-                 alt="@Model.Title" class="portada img-fluid" data-url="@ViewBag.Url"
-                 style="max-height: 300px;">
+            <img src="@imageSrc" alt="@Model.Title" class="product-cover img-fluid" style="max-height: 300px;">
         </div>
         <div class="col-md-8">
             <div class="card-body">
@@ -19,15 +22,15 @@
                 </div>
                 <div class="mb-3 ps-3">
                     <label asp-for="Price" class="form-label form-text"></label>
-                    <div class="form-text text-body">@Model.Price</div>
+                    <div class="form-text text-body">@DisplayFormatter.FormatCurrency(Model.Price)</div>
                 </div>
                 <div class="mb-3 ps-3">
-                    <label asp-for="FileId" class="form-label form-text"></label>
-                    <div class="form-text text-body">@(Model.FileId == null ? "N/A" : $"Id: {Model.FileId}")</div>
+                    <label asp-for="Stock" class="form-label form-text"></label>
+                    <div class="form-text text-body">@Model.Stock</div>
                 </div>
                 <div class="mb-3 ps-3">
                     <label asp-for="Description" class="form-label form-text"></label>
-                    <div class="form-text text-body">@Model.Description</div>
+                    <div class="form-text text-body">@(string.IsNullOrWhiteSpace(Model.Description) ? "Sin descripción" : Model.Description)</div>
                 </div>
             </div>
         </div>

@@ -1,16 +1,31 @@
+using System.Globalization;
+
 namespace FrontendNet.Models;
 
-/// <summary>Write body for POST/PUT api/products.</summary>
-public class ProductRequest
+/// <summary>Builds strict JSON payloads expected by POST and PUT /api/products.</summary>
+public static class ProductRequest
 {
-    public required string Title { get; set; }
-    public string? Description { get; set; }
-    public decimal Price { get; set; }
-
-    public static ProductRequest Create(Product p) => new()
+    public static Dictionary<string, object?> CreatePayload(ProductFormModel model)
     {
-        Title = p.Title,
-        Description = p.Description,
-        Price = p.Price,
+        var payload = new Dictionary<string, object?>
+        {
+            ["title"] = model.Title.Trim(),
+            ["description"] = model.Description.Trim(),
+            ["price"] = model.Price.ToString("0.00", CultureInfo.InvariantCulture),
+            ["stock"] = model.Stock
+        };
+
+        if (model.CategoryId is > 0)
+            payload["categoryId"] = model.CategoryId.Value;
+
+        return payload;
+    }
+
+    public static object UpdatePayload(ProductFormModel model) => new
+    {
+        title = model.Title.Trim(),
+        description = model.Description.Trim(),
+        price = model.Price.ToString("0.00", CultureInfo.InvariantCulture),
+        stock = model.Stock
     };
 }

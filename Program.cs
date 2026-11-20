@@ -1,115 +1,121 @@
+using System.Globalization;
 using FrontendNet.Extensions;
-using FrontendNet.Filters;
 using FrontendNet.Middlewares;
 using FrontendNet.Services;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Mvc;
+using SystemNet = System.Net;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Agregamos los servicios. Antiforgery se valida en TODOS los POST/PUT/DELETE (Fase 6);
-// el filtro de imágenes publica ViewBag.Url (proxy o API directo).
+// Enforce Antiforgery validation on all unsafe HTTP methods globally.
 builder.Services.AddControllersWithViews(options =>
 {
     options.Filters.Add(new AutoValidateAntiforgeryTokenAttribute());
-    options.Filters.AddService<ImageUrlFilter>();
 });
-builder.Services.AddScoped<ImageUrlFilter>();
 
-// Fuera de Desarrollo se exige HTTPS (cookies Secure, HSTS, redirección). Para una demo en LAN sobre http
-// se puede desactivar explícitamente con Seguridad:RequiereHttps=false (no recomendado).
-var requiereHttps = builder.Configuration.GetValue("Seguridad:RequiereHttps", !builder.Environment.IsDevelopment());
-var segura = requiereHttps ? CookieSecurePolicy.Always : CookieSecurePolicy.SameAsRequest;
+// Outside Development, HTTPS is required (Secure cookies, HSTS, HTTPS redirection).
+var requireHttps = builder.Configuration.GetValue("Security:RequireHttps", !builder.Environment.IsDevelopment());
+var cookieSecurePolicy = requireHttps ? CookieSecurePolicy.Always : CookieSecurePolicy.SameAsRequest;
+
 builder.Services.AddAntiforgery(options =>
 {
     options.Cookie.Name = ".frontendnet.af";
-    options.Cookie.SecurePolicy = segura;
+    options.Cookie.SecurePolicy = cookieSecurePolicy;
     options.Cookie.SameSite = SameSiteMode.Lax;
 });
 
-// Sesión del servidor web: solo la usa el shoppingCart simulado (guarda ids y cantidades, nunca precios).
-builder.Services.AddDistributedMemoryCache();
-builder.Services.AddSession(options =>
+builder.Services.Configure<CookieTempDataProviderOptions>(options =>
 {
-    options.Cookie.Name = ".frontendnet.session";
+    options.Cookie.Name = ".frontendnet.tempdata";
     options.Cookie.HttpOnly = true;
-    options.Cookie.IsEssential = true;
-    options.Cookie.SecurePolicy = segura;
+    options.Cookie.SecurePolicy = cookieSecurePolicy;
     options.Cookie.SameSite = SameSiteMode.Lax;
-    options.IdleTimeout = TimeSpan.FromMinutes(20);
 });
 
-// Soporte para consultar el API
-var urlWebApi = builder.Configuration["UrlWebAPI"]
-    ?? throw new InvalidOperationException("Falta la configuración 'UrlWebAPI' (URL del Web API) en appsettings.json.");
+var apiBaseUrl = builder.Configuration["ApiBaseUrl"]
+    ?? throw new InvalidOperationException("Missing 'ApiBaseUrl' configuration setting.");
+
 builder.Services.AddHttpContextAccessor();
+builder.Services.AddSingleton<ISessionTokenManager, SessionTokenManager>();
+builder.Services.AddTransient<ClientIpForwardingDelegatingHandler>();
 builder.Services.AddTransient<BearerTokenDelegatingHandler>();
 builder.Services.AddTransient<RefreshTokenDelegatingHandler>();
 builder.Services.AddHttpClient<CloudflareTurnstileService>();
 
-// Soporte para proxies perimetrales Cloudflare (CF-Connecting-IP)
+// Configure forwarded headers for Cloudflare proxies when trusted proxy CIDRs are configured.
 builder.Services.Configure<ForwardedHeadersOptions>(options =>
 {
-    options.ForwardedHeaders = Microsoft.AspNetCore.HttpOverrides.ForwardedHeaders.XForwardedFor | Microsoft.AspNetCore.HttpOverrides.ForwardedHeaders.XForwardedProto;
+    options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
     options.ForwardedForHeaderName = "CF-Connecting-IP";
     options.ForwardedProtoHeaderName = "X-Forwarded-Proto";
-    options.KnownNetworks.Clear();
-    options.KnownProxies.Clear();
+
+    var trustedCidrs = builder.Configuration.GetSection("Security:TrustedProxyCidrs").Get<string[]>();
+    if (trustedCidrs is { Length: > 0 })
+    {
+        foreach (var cidr in trustedCidrs)
+        {
+            if (SystemNet.IPNetwork.TryParse(cidr, out var network))
+                options.KnownNetworks.Add(new IPNetwork(network.BaseAddress, network.PrefixLength));
+        }
+    }
 });
 
-// El login es el único cliente que no envía el token
-builder.Services.AddHttpClient<AuthClientService>(client => client.BaseAddress = new Uri(urlWebApi));
-builder.Services.AddApiClient<CategoryClientService>(urlWebApi);
-builder.Services.AddApiClient<UsersClientService>(urlWebApi);
-builder.Services.AddApiClient<RolesClientService>(urlWebApi);
-builder.Services.AddApiClient<ProductClientService>(urlWebApi);
-builder.Services.AddApiClient<ProfileClientService>(urlWebApi);
-builder.Services.AddApiClient<FilesClientService>(urlWebApi);
-builder.Services.AddApiClient<AuditLogClientService>(urlWebApi);
+// AuthClientService avoids Bearer/Refresh handlers to prevent recursive refresh loops, while still forwarding client IP.
+builder.Services.AddHttpClient<AuthClientService>(client => client.BaseAddress = new Uri(apiBaseUrl))
+    .AddHttpMessageHandler<ClientIpForwardingDelegatingHandler>();
+builder.Services.AddApiClient<CategoryClientService>(apiBaseUrl);
+builder.Services.AddApiClient<UsersClientService>(apiBaseUrl);
+builder.Services.AddApiClient<ProductClientService>(apiBaseUrl);
+builder.Services.AddApiClient<ProfileClientService>(apiBaseUrl);
+builder.Services.AddApiClient<AddressesClientService>(apiBaseUrl);
+builder.Services.AddApiClient<AuditLogClientService>(apiBaseUrl);
+builder.Services.AddApiClient<IShoppingCartService, ShoppingCartClientService>(apiBaseUrl);
+builder.Services.AddApiClient<IOrdersService, OrdersClientService>(apiBaseUrl);
 
-// ShoppingCart y orders: contratos PROPUESTOS (aún no existen en el backend).
-// Features:CompraSimulada=true usa las simulaciones (sesión / memoria) con banner visible;
-// con false se usan los clientes definitivos del API: es el único cambio al publicar el backend (DD-11).
-if (builder.Configuration.GetValue<bool>("Features:CompraSimulada"))
-{
-    builder.Services.AddScoped<IShoppingCartService, SessionShoppingCartService>();
-    builder.Services.AddSingleton<OrdersStore>();
-    builder.Services.AddScoped<IOrdersService, InMemoryOrdersService>();
-}
-else
-{
-    builder.Services.AddApiClient<IShoppingCartService, ShoppingCartClientService>(urlWebApi);
-    builder.Services.AddApiClient<IOrdersService, OrdersClientService>(urlWebApi);
-}
-
-// Soporte para Cookie Auth
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
     .AddCookie(options =>
     {
         options.Cookie.Name = ".frontendnet";
         options.Cookie.HttpOnly = true;
-        options.Cookie.SecurePolicy = segura;
+        options.Cookie.SecurePolicy = cookieSecurePolicy;
         options.Cookie.SameSite = SameSiteMode.Lax;
         options.AccessDeniedPath = "/Home/AccessDenied";
         options.LoginPath = "/Auth";
-        // DD-07: la expiración de la cookie la fija el 'exp' del JWT (AuthClientService.SignInAsync),
-        // por eso no hay expiración deslizante que pueda desalinearla.
-        options.SlidingExpiration = false;
-        options.ExpireTimeSpan = TimeSpan.FromMinutes(20);
+        // Match backend Redis idle TTL (30 minutes) and enforce the 8-hour absolute cap via OnValidatePrincipal.
+        options.SlidingExpiration = true;
+        options.ExpireTimeSpan = TimeSpan.FromMinutes(30);
+        options.Events = new CookieAuthenticationEvents
+        {
+            OnValidatePrincipal = async context =>
+            {
+                var absClaim = context.Principal?.FindFirst(SessionTokenManager.AbsoluteExpirationClaimType)?.Value;
+                if (long.TryParse(absClaim, NumberStyles.Integer, CultureInfo.InvariantCulture, out var absSeconds) &&
+                    DateTimeOffset.FromUnixTimeSeconds(absSeconds) <= DateTimeOffset.UtcNow)
+                {
+                    var tokenManager = context.HttpContext.RequestServices.GetService<ISessionTokenManager>();
+                    tokenManager?.RemoveSession(context.Principal);
+                    context.RejectPrincipal();
+                    await context.HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+                }
+            }
+        };
     });
 
 var app = builder.Build();
 
 app.UseForwardedHeaders();
-
-// Agregamos un middleware para el manejo de errores
 app.UseExceptionHandler("/Home/Error");
-app.UseStatusCodePagesWithReExecute("/Home/Estado/{0}");
-if (requiereHttps)
+app.UseStatusCodePagesWithReExecute("/Home/Status/{0}");
+
+if (requireHttps)
 {
     app.UseHsts();
     app.UseHttpsRedirection();
 }
+
 app.UseMiddleware<SecurityHeadersMiddleware>();
 app.UseStaticFiles();
 
@@ -117,23 +123,10 @@ app.UseRouting();
 
 app.UseAuthentication();
 app.UseAuthorization();
-app.UseSession();
 
-app.MapControllerRoute("legacy-files", "Archivos/{action=Index}/{id?}", new { controller = "Files" });
-app.MapControllerRoute("legacy-audit-log", "Bitacora/{action=Index}/{id?}", new { controller = "AuditLog" });
-app.MapControllerRoute("legacy-shopping-cart", "Carrito/{action=Index}/{id?}", new { controller = "ShoppingCart" });
-app.MapControllerRoute("legacy-categories", "Categorias/{action=Index}/{id?}", new { controller = "Categories" });
-app.MapControllerRoute("legacy-shopping", "Comprar/{action=Index}/{id?}", new { controller = "Shopping" });
-app.MapControllerRoute("legacy-images", "Imagenes/{action=Index}/{id?}", new { controller = "Images" });
-app.MapControllerRoute("legacy-orders", "Pedidos/{action=Index}/{id?}", new { controller = "Orders" });
-app.MapControllerRoute("legacy-profile", "Perfil/{action=Index}/{id?}", new { controller = "Profile" });
-app.MapControllerRoute("legacy-products", "Productos/{action=Index}/{id?}", new { controller = "Products" });
-app.MapControllerRoute("legacy-users", "Usuarios/{action=Index}/{id?}", new { controller = "Users" });
-app.MapControllerRoute("legacy-users-en", "Users/{action=Index}/{id?}", new { controller = "Users" });
-app.MapControllerRoute("legacy-users-compat", "BUYERs/{action=Index}/{id?}", new { controller = "Users" });
 app.MapControllerRoute("default", "{controller=Home}/{action=Index}/{id?}");
 
 app.Run();
 
-// Necesario para WebApplicationFactory en las pruebas.
+// Exposed for WebApplicationFactory in integration tests.
 public partial class Program { }

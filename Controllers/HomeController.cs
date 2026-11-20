@@ -4,29 +4,18 @@ namespace FrontendNet;
 
 public class HomeController : Controller
 {
-    public IActionResult Index()
-    {
-        return View("Index");
-    }
+    public IActionResult Index() => View("Index");
 
-    public IActionResult Error([FromServices] IHostEnvironment hostEnvironment)
-    {
-        return View("Error");
-    }
+    public IActionResult Error() => View("Error");
 
-    public IActionResult AccessDenied()
-    {
-        return View("AccessDenied");
-    }
+    public IActionResult AccessDenied() => View("AccessDenied");
 
-    /// <summary>Página para códigos de estado sin cuerpo (404, 403…) vía UseStatusCodePagesWithReExecute.</summary>
-    [ActionName("Estado")]
+    /// <summary>Renders friendly error pages for status codes via UseStatusCodePagesWithReExecute.</summary>
     public IActionResult Status(int id)
     {
-        // SEC-09: Valida rango válido de HTTP StatusCode (400-599) para evitar ArgumentOutOfRangeException
-        var codigo = id is >= 400 and <= 599 ? id : StatusCodes.Status500InternalServerError;
-        Response.StatusCode = codigo;
-        ViewBag.Codigo = codigo;
+        var validStatusCode = id is >= 400 and <= 599 ? id : StatusCodes.Status500InternalServerError;
+        Response.StatusCode = validStatusCode;
+        ViewBag.StatusCode = validStatusCode;
         return View("Status");
     }
 }

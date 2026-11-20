@@ -1,81 +1,182 @@
-using FrontendNet.Helpers;
+using System.Net;
+using System.Security.Claims;
 using FrontendNet.Models;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
-using System.Security.Claims;
+
 namespace FrontendNet.Services;
 
-public class AuthClientService(HttpClient client, IHttpContextAccessor httpContextAccessor)
+public class AuthClientService(
+    HttpClient client,
+    IHttpContextAccessor httpContextAccessor,
+    ISessionTokenManager tokenManager)
 {
-    public async Task<AuthUser> GetTokenAsync(string email, string password)
+    public async Task<AuthUser> LoginAsync(string email, string password, CancellationToken ct = default)
     {
-        Login usuario = new() { Email = email, Password = password };
+        var payload = new Login { Email = email.Trim(), Password = password };
         HttpResponseMessage response;
         try
         {
-            response = await client.PostAsJsonAsync("api/auth", usuario);
+            response = await client.PostAsJsonAsync("api/auth", payload, ct);
         }
         catch (HttpRequestException ex) when (ex is not ApiException)
         {
             throw new ApiException(null, null, null, ex);
         }
+
         using (response)
         {
             if (!response.IsSuccessStatusCode)
-                throw await ApiException.DesdeRespuestaAsync(response);
-            var token = await response.Content.ReadFromJsonAsync<AuthUser>();
-            return token!;
+                throw await ApiException.FromResponseAsync(response, ct);
+
+            return (await response.Content.ReadFromJsonAsync<AuthUser>(ct))!;
         }
     }
 
-    public async Task SignInAsync(IEnumerable<Claim> claims)
+    public async Task<AuthUser?> TryRefreshAsync(string refreshToken, CancellationToken ct = default)
+    {
+        if (string.IsNullOrWhiteSpace(refreshToken))
+            return null;
+
+        HttpResponseMessage response;
+        try
+        {
+            response = await client.PostAsJsonAsync("api/auth/refresh", new { refreshToken }, ct);
+        }
+        catch (HttpRequestException ex) when (ex is not ApiException)
+        {
+            throw new ApiException(null, null, null, ex);
+        }
+
+        using (response)
+        {
+            if (response.StatusCode is HttpStatusCode.BadRequest or HttpStatusCode.Unauthorized or HttpStatusCode.Forbidden)
+                return null;
+
+            if (!response.IsSuccessStatusCode)
+                throw await ApiException.FromResponseAsync(response, ct);
+
+            return await response.Content.ReadFromJsonAsync<AuthUser>(ct);
+        }
+    }
+
+    public async Task<string?> RegisterAsync(RegisterRequestModel model, CancellationToken ct = default)
+    {
+        var profile = model.Profile.Trim().ToUpperInvariant();
+        var payload = new Dictionary<string, object?>
+        {
+            ["profile"] = profile,
+            ["name"] = model.Name.Trim(),
+            ["email"] = model.Email.Trim(),
+            ["password"] = model.Password
+        };
+
+        if (!string.IsNullOrWhiteSpace(model.PhoneNumber))
+            payload["phoneNumber"] = model.PhoneNumber.Trim();
+
+        if (profile == Roles.Seller && !string.IsNullOrWhiteSpace(model.StoreName))
+            payload["storeName"] = model.StoreName.Trim();
+
+        var result = await PostPublicAsync<ApiMessageResponse>("api/auth/register", payload, ct);
+        return result?.Message;
+    }
+
+    public async Task<VerifyRegistrationResult> VerifyRegistrationAsync(
+        string email,
+        string code,
+        CancellationToken ct = default)
+    {
+        var result = await PostPublicAsync<VerifyRegistrationResult>(
+            "api/auth/register/verify",
+            new { email = email.Trim(), code = code.Trim() },
+            ct);
+
+        return result!;
+    }
+
+    public async Task<string?> ForgotPasswordAsync(string email, CancellationToken ct = default)
+    {
+        var result = await PostPublicAsync<ApiMessageResponse>(
+            "api/auth/password/forgot",
+            new { email = email.Trim() },
+            ct);
+
+        return result?.Message;
+    }
+
+    public async Task ResetPasswordAsync(
+        string email,
+        string code,
+        string newPassword,
+        CancellationToken ct = default)
+    {
+        HttpResponseMessage response;
+        try
+        {
+            response = await client.PostAsJsonAsync(
+                "api/auth/password/reset",
+                new { email = email.Trim(), code = code.Trim(), newPassword },
+                ct);
+        }
+        catch (HttpRequestException ex) when (ex is not ApiException)
+        {
+            throw new ApiException(null, null, null, ex);
+        }
+
+        using (response)
+        {
+            if (!response.IsSuccessStatusCode)
+                throw await ApiException.FromResponseAsync(response, ct);
+        }
+    }
+
+    public async Task SignInAsync(AuthUser authUser, DateTimeOffset? existingAbsoluteExpiresUtc = null)
     {
         var httpContext = httpContextAccessor.HttpContext
-            ?? throw new InvalidOperationException("No hay un HttpContext activo para iniciar sesión.");
-        var items = claims.ToList();
-        var claimsIdentity = new ClaimsIdentity(items, CookieAuthenticationDefaults.AuthenticationScheme);
-        var props = new AuthenticationProperties();
-        // DD-07: la cookie expira junto con el JWT para evitar sesiones "zombi" (D-14).
-        var info = JwtInfo.Read(items.FirstOrDefault(c => c.Type == "jwt")?.Value);
-        if (info?.Expira is { } exp)
-            props.ExpiresUtc = exp;
-        var principal = new ClaimsPrincipal(claimsIdentity);
-        await httpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, principal, props);
-        // La petición en curso también debe ver el JWT renovado.
+            ?? throw new InvalidOperationException("No active HttpContext is available to sign in.");
+
+        var claims = tokenManager.StoreSession(authUser, existingAbsoluteExpiresUtc);
+        var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+        var principal = new ClaimsPrincipal(identity);
+
+        await httpContext.SignInAsync(
+            CookieAuthenticationDefaults.AuthenticationScheme,
+            principal,
+            new AuthenticationProperties { IsPersistent = false });
+
         httpContext.User = principal;
     }
 
-    /// <summary>
-    /// Normaliza los claims de roles entre el backend (ADMIN, BUYER) y las vistas (Administrador, Usuario)
-    /// garantizando consistencia en RBAC y contratos de autorización.
-    /// </summary>
-    public static List<Claim> NormalizaClaims(AuthUser token)
+    public async Task SignOutLocalAsync()
     {
-        var claims = new List<Claim>
-        {
-            new(ClaimTypes.Email, token.Email),
-            new(ClaimTypes.Name, token.Name),
-            new("jwt", token.Jwt)
-        };
+        var httpContext = httpContextAccessor.HttpContext;
+        if (httpContext is null) return;
 
-        var rawRole = (token.Profile ?? token.Role ?? "").Trim();
-        if (rawRole.Equals("ADMIN", StringComparison.OrdinalIgnoreCase) ||
-            rawRole.Equals("Administrador", StringComparison.OrdinalIgnoreCase))
+        tokenManager.RemoveSession(httpContext.User);
+        httpContext.User = new ClaimsPrincipal(new ClaimsIdentity());
+
+        if (!httpContext.Response.HasStarted)
+            await httpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+    }
+
+    private async Task<T?> PostPublicAsync<T>(string path, object payload, CancellationToken ct)
+    {
+        HttpResponseMessage response;
+        try
         {
-            claims.Add(new Claim(ClaimTypes.Role, "ADMIN"));
-            claims.Add(new Claim(ClaimTypes.Role, "Administrador"));
+            response = await client.PostAsJsonAsync(path, payload, ct);
         }
-        else if (rawRole.Equals("BUYER", StringComparison.OrdinalIgnoreCase) ||
-                 rawRole.Equals("Usuario", StringComparison.OrdinalIgnoreCase))
+        catch (HttpRequestException ex) when (ex is not ApiException)
         {
-            claims.Add(new Claim(ClaimTypes.Role, "BUYER"));
-            claims.Add(new Claim(ClaimTypes.Role, "Usuario"));
-        }
-        else if (!string.IsNullOrEmpty(rawRole))
-        {
-            claims.Add(new Claim(ClaimTypes.Role, rawRole));
+            throw new ApiException(null, null, null, ex);
         }
 
-        return claims;
+        using (response)
+        {
+            if (!response.IsSuccessStatusCode)
+                throw await ApiException.FromResponseAsync(response, ct);
+
+            return await response.Content.ReadFromJsonAsync<T>(ct);
+        }
     }
 }

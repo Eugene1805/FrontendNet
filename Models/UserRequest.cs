@@ -1,13 +1,19 @@
 namespace FrontendNet.Models;
-using System.Text.Json.Serialization;
 
-/// <summary>Write body for PUT api/users/:email. Password is optional.</summary>
-public class UserRequest
+/// <summary>Strict request payload for PUT /api/users/:email (null properties are omitted).</summary>
+public class UserUpdateRequest
 {
-    public required string Name { get; set; }
-    public string? Profile { get; set; }
+    public string? Name { get; set; }
     public string? Status { get; set; }
-    [JsonIgnore]
-    public string? Role { get => Profile; set => Profile = value; }
     public string? Password { get; set; }
+}
+
+/// <summary>Response returned by seller review and suspend endpoints.</summary>
+public class SellerReviewResponse
+{
+    public string UserId { get; set; } = string.Empty;
+    public string Status { get; set; } = string.Empty;
+    public string? RejectionReason { get; set; }
+    public DateTime? ReviewedAt { get; set; }
+    public string? ReviewedByUserId { get; set; }
 }

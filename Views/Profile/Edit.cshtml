@@ -1,7 +1,8 @@
-@model ProfileName
+@model ProfileEditModel
 @{
     ViewData["Title"] = "Perfil de usuario";
-    ViewData["SubTitle"] = "Editar nombre";
+    ViewData["SubTitle"] = "Editar perfil";
+    bool isSeller = ViewBag.IsSeller == true;
 }
 
 @section Scripts {
@@ -17,7 +18,7 @@
 
 <h2 class="text-center mb-3">@ViewData["Title"] <small class="text-muted fs-5">@ViewData["SubTitle"]</small></h2>
 
-<form asp-action="Editar">
+<form asp-action="Edit" method="post">
     <div asp-validation-summary="ModelOnly" class="text-danger"></div>
     <div class="card mt-3">
         <div class="card-body small">
@@ -26,10 +27,23 @@
                 <label asp-for="Name" class="form-label"></label>
                 <span asp-validation-for="Name" class="text-danger"></span>
             </div>
+            <div class="form-floating mb-3">
+                <input asp-for="PhoneNumber" placeholder="Teléfono" class="form-control" />
+                <label asp-for="PhoneNumber" class="form-label"></label>
+                <span asp-validation-for="PhoneNumber" class="text-danger"></span>
+            </div>
+            @if (isSeller)
+            {
+                <div class="form-floating mb-3">
+                    <input asp-for="StoreName" placeholder="Nombre de la tienda" class="form-control" />
+                    <label asp-for="StoreName" class="form-label"></label>
+                    <span asp-validation-for="StoreName" class="text-danger"></span>
+                </div>
+            }
         </div>
     </div>
     <div class="text-center mt-3">
-        <button id="btnEnviar" type="submit" class="btn btn-sm btn-primary">Guardar</button>
+        <button id="submitButton" type="submit" class="btn btn-sm btn-primary">Guardar</button>
         <a class="btn btn-sm btn-outline-secondary" asp-action="Index">Cancelar</a>
     </div>
 </form>

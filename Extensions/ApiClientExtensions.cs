@@ -5,26 +5,28 @@ namespace FrontendNet.Extensions;
 public static class ApiClientExtensions
 {
     /// <summary>
-    /// Registra un cliente tipado del Web API que envía el JWT de la sesión
-    /// y renueva la cookie cuando el API responde con Set-Authorization.
+    /// Registers a typed HTTP client for the backend API with proactive/reactive session token refresh
+    /// and Bearer header injection.
     /// </summary>
-    public static IHttpClientBuilder AddApiClient<TClient>(this IServiceCollection services, string urlWebApi)
+    public static IHttpClientBuilder AddApiClient<TClient>(this IServiceCollection services, string apiBaseUrl)
         where TClient : class
     {
         return services
-            .AddHttpClient<TClient>(client => client.BaseAddress = new Uri(urlWebApi))
-            .AddHttpMessageHandler<BearerTokenDelegatingHandler>()
-            .AddHttpMessageHandler<RefreshTokenDelegatingHandler>();
+            .AddHttpClient<TClient>(client => client.BaseAddress = new Uri(apiBaseUrl))
+            .AddHttpMessageHandler<ClientIpForwardingDelegatingHandler>()
+            .AddHttpMessageHandler<RefreshTokenDelegatingHandler>()
+            .AddHttpMessageHandler<BearerTokenDelegatingHandler>();
     }
 
-    /// <summary>Igual que <see cref="AddApiClient{TClient}"/> pero registrado bajo una interfaz.</summary>
-    public static IHttpClientBuilder AddApiClient<TService, TImplementation>(this IServiceCollection services, string urlWebApi)
+    /// <summary>Registers a typed API client bound to an interface.</summary>
+    public static IHttpClientBuilder AddApiClient<TService, TImplementation>(this IServiceCollection services, string apiBaseUrl)
         where TService : class
         where TImplementation : class, TService
     {
         return services
-            .AddHttpClient<TService, TImplementation>(client => client.BaseAddress = new Uri(urlWebApi))
-            .AddHttpMessageHandler<BearerTokenDelegatingHandler>()
-            .AddHttpMessageHandler<RefreshTokenDelegatingHandler>();
+            .AddHttpClient<TService, TImplementation>(client => client.BaseAddress = new Uri(apiBaseUrl))
+            .AddHttpMessageHandler<ClientIpForwardingDelegatingHandler>()
+            .AddHttpMessageHandler<RefreshTokenDelegatingHandler>()
+            .AddHttpMessageHandler<BearerTokenDelegatingHandler>();
     }
 }

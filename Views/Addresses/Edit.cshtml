@@ -1,0 +1,109 @@
+@model AddressFormModel
+@{
+    ViewData["Title"] = "Mis direcciones";
+    ViewData["SubTitle"] = "Editar";
+}
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
+
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb small">
+        <li class="breadcrumb-item"><a class="text-decoration-none" asp-action="Index">Listado</a></li>
+        <li class="breadcrumb-item active" aria-current="page">@ViewData["SubTitle"]</li>
+    </ol>
+</nav>
+
+<h2 class="text-center mb-3">@ViewData["Title"] <small class="text-muted fs-5">@ViewData["SubTitle"]</small></h2>
+
+<form asp-action="Edit" asp-route-id="@Model.Id" method="post">
+    <input type="hidden" asp-for="Id" />
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+    <div class="card mt-3">
+        <div class="card-body small">
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <div class="form-floating">
+                        <input asp-for="Label" class="form-control" placeholder="Etiqueta" />
+                        <label asp-for="Label" class="form-label"></label>
+                        <span asp-validation-for="Label" class="text-danger"></span>
+                    </div>
+                </div>
+                <div class="col-md-8">
+                    <div class="form-floating">
+                        <input asp-for="RecipientName" class="form-control" placeholder="Nombre del destinatario" />
+                        <label asp-for="RecipientName" class="form-label"></label>
+                        <span asp-validation-for="RecipientName" class="text-danger"></span>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-floating">
+                        <input asp-for="Street" class="form-control" placeholder="Calle" />
+                        <label asp-for="Street" class="form-label"></label>
+                        <span asp-validation-for="Street" class="text-danger"></span>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="form-floating">
+                        <input asp-for="ExteriorNumber" class="form-control" placeholder="Número exterior" />
+                        <label asp-for="ExteriorNumber" class="form-label"></label>
+                        <span asp-validation-for="ExteriorNumber" class="text-danger"></span>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="form-floating">
+                        <input asp-for="InteriorNumber" class="form-control" placeholder="Número interior" />
+                        <label asp-for="InteriorNumber" class="form-label"></label>
+                        <span asp-validation-for="InteriorNumber" class="text-danger"></span>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-floating">
+                        <input asp-for="Neighborhood" class="form-control" placeholder="Colonia" />
+                        <label asp-for="Neighborhood" class="form-label"></label>
+                        <span asp-validation-for="Neighborhood" class="text-danger"></span>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-floating">
+                        <input asp-for="City" class="form-control" placeholder="Ciudad" />
+                        <label asp-for="City" class="form-label"></label>
+                        <span asp-validation-for="City" class="text-danger"></span>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-floating">
+                        <input asp-for="State" class="form-control" placeholder="Estado" />
+                        <label asp-for="State" class="form-label"></label>
+                        <span asp-validation-for="State" class="text-danger"></span>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="form-floating">
+                        <input asp-for="PostalCode" class="form-control" placeholder="Código postal" />
+                        <label asp-for="PostalCode" class="form-label"></label>
+                        <span asp-validation-for="PostalCode" class="text-danger"></span>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="form-floating">
+                        <input asp-for="Country" class="form-control" placeholder="País" maxlength="2" />
+                        <label asp-for="Country" class="form-label"></label>
+                        <span asp-validation-for="Country" class="text-danger"></span>
+                    </div>
+                </div>
+                <div class="col-12">
+                    <div class="form-check">
+                        <input asp-for="IsDefault" class="form-check-input" />
+                        <label asp-for="IsDefault" class="form-check-label"></label>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="text-center mt-3">
+        <button id="submitButton" type="submit" class="btn btn-sm btn-primary">Guardar cambios</button>
+        <a class="btn btn-sm btn-outline-secondary" asp-action="Index">Cancelar</a>
+    </div>
+</form>

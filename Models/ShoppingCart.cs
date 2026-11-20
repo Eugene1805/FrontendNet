@@ -1,32 +1,34 @@
-using System.ComponentModel.DataAnnotations;
-using System.Globalization;
 using System.Text.Json.Serialization;
+using FrontendNet.Helpers;
+
 namespace FrontendNet.Models;
 
-/// <summary>Persistent cart response returned by the real API.</summary>
+/// <summary>Persistent cart response returned by /api/cart.</summary>
 public class ShoppingCart
 {
+    public string? Id { get; set; }
     public List<CartItem> Items { get; set; } = [];
     public string Subtotal { get; set; } = "0.00";
+
     [JsonIgnore]
     public int TotalItems => Items.Sum(item => item.Quantity);
+
     [JsonIgnore]
-    public decimal Total => decimal.TryParse(Subtotal, NumberStyles.Number, CultureInfo.InvariantCulture, out var value) ? value : 0m;
+    public decimal TotalValue => DisplayFormatter.ParseDecimal(Subtotal);
 }
 
 public class CartItem
 {
     public int ProductId { get; set; }
-    public string Title { get; set; } = "";
-    [DisplayFormat(DataFormatString = "{0:C}")]
-    public string? UnitPrice { get; set; }
-    [JsonIgnore]
-    public decimal Price => decimal.TryParse(UnitPrice, NumberStyles.Number, CultureInfo.InvariantCulture, out var value) ? value : 0m;
-    [JsonIgnore]
-    public int? FileId => null;
     public int Quantity { get; set; }
+    public string? Title { get; set; }
+    public string? UnitPrice { get; set; }
     public string? Subtotal { get; set; }
-    [JsonIgnore]
-    public decimal SubtotalValue => decimal.TryParse(Subtotal, NumberStyles.Number, CultureInfo.InvariantCulture, out var value) ? value : 0m;
     public bool Available { get; set; }
+
+    [JsonIgnore]
+    public decimal UnitPriceValue => DisplayFormatter.ParseDecimal(UnitPrice);
+
+    [JsonIgnore]
+    public decimal SubtotalValue => DisplayFormatter.ParseDecimal(Subtotal);
 }

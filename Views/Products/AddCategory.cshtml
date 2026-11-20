@@ -10,10 +10,9 @@
 
 <nav aria-label="breadcrumb">
     <ol class="breadcrumb small">
-        <li class="breadcrumb-item"><a class="text-decoration-none" title="Volver al listado"
-                asp-action="Index">Listado</a></li>
+        <li class="breadcrumb-item"><a class="text-decoration-none" title="Volver al listado" asp-action="Index">Listado</a></li>
         <li class="breadcrumb-item"><a class="text-decoration-none" title="Regresar a las categorías"
-                asp-action="Categorias" asp-route-id="@Model.Product?.ProductId">Categorías</a></li>
+                asp-action="Categories" asp-route-id="@Model.Product?.ProductId">Categorías</a></li>
         <li class="breadcrumb-item active" aria-current="page">@ViewData["SubTitle"]</li>
     </ol>
 </nav>
@@ -21,12 +20,12 @@
 <h2 class="text-center mb-3">@ViewData["Title"] <small class="text-muted fs-5">@ViewData["SubTitle"]</small></h2>
 
 <h4 class="my-3">Agregar categoría</h4>
-<form asp-action="CategoriasAgregar" asp-route-id="@Model.Product?.ProductId">
+<form asp-action="AddCategory" asp-route-id="@Model.Product?.ProductId" method="post">
     <div asp-validation-summary="ModelOnly" class="text-danger"></div>
     <div class="card mt-3">
         <div class="card-body small">
             <div class="form-floating mb-3">
-                <select class="form-select" asp-for="CategoryId" asp-items="ViewBag.Categoria">
+                <select class="form-select" asp-for="CategoryId" asp-items="ViewBag.Categories">
                     <option value="">Seleccione una categoría</option>
                 </select>
                 <label asp-for="CategoryId" class="control-label"></label>
@@ -35,8 +34,8 @@
         </div>
     </div>
     <div class="text-center mt-3">
-        <button id="btnEnviar" type="submit" class="btn btn-sm btn-primary">Agregar</button>
-        <a class="btn btn-sm btn-outline-secondary" asp-action="Categorias" asp-route-id="@Model.Product?.ProductId"
+        <button id="submitButton" type="submit" class="btn btn-sm btn-primary">Agregar</button>
+        <a class="btn btn-sm btn-outline-secondary" asp-action="Categories" asp-route-id="@Model.Product?.ProductId"
            title="Cancelar">Cancelar</a>
     </div>
 </form>

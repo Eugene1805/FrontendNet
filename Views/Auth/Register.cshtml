@@ -1,0 +1,85 @@
+@model RegisterRequestModel
+@inject Microsoft.Extensions.Configuration.IConfiguration Configuration
+@{
+    ViewData["Title"] = "Crear cuenta";
+    var siteKey = Configuration["Cloudflare:TurnstileSiteKey"];
+    var isSeller = string.Equals(Model.Profile, Roles.Seller, StringComparison.OrdinalIgnoreCase);
+}
+
+<form asp-action="Register" method="post">
+    <div class="card mx-auto" style="max-width: 560px;">
+        <div class="card-body">
+            <h1 class="h3 text-center">Crear cuenta</h1>
+            <p class="text-center text-muted small">Te enviaremos un código de 6 dígitos a tu correo para activar tu cuenta.</p>
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+            <div class="form-floating mb-3">
+                <select asp-for="Profile" class="form-select">
+                    <option value="@Roles.Buyer">Comprador</option>
+                    <option value="@Roles.Seller">Vendedor (tienda)</option>
+                </select>
+                <label asp-for="Profile" class="form-label"></label>
+                <span asp-validation-for="Profile" class="text-danger"></span>
+            </div>
+
+            <div class="form-floating mb-3">
+                <input asp-for="Name" class="form-control" placeholder="Nombre completo" autocomplete="name" />
+                <label asp-for="Name" class="form-label"></label>
+                <span asp-validation-for="Name" class="text-danger"></span>
+            </div>
+
+            <div id="storeNameGroup" class="form-floating mb-3 @(isSeller ? "" : "d-none")">
+                <input asp-for="StoreName" class="form-control" placeholder="Nombre de la tienda" />
+                <label asp-for="StoreName" class="form-label"></label>
+                <span asp-validation-for="StoreName" class="text-danger"></span>
+            </div>
+
+            <div class="form-floating mb-3">
+                <input asp-for="Email" class="form-control" placeholder="Correo electrónico" autocomplete="email" />
+                <label asp-for="Email" class="form-label"></label>
+                <span asp-validation-for="Email" class="text-danger"></span>
+            </div>
+
+            <div class="form-floating mb-3">
+                <input asp-for="PhoneNumber" class="form-control" placeholder="Teléfono" autocomplete="tel" />
+                <label asp-for="PhoneNumber" class="form-label"></label>
+                <span asp-validation-for="PhoneNumber" class="text-danger"></span>
+            </div>
+
+            <div class="form-floating mb-3">
+                <input asp-for="Password" class="form-control" placeholder="Contraseña" autocomplete="new-password" />
+                <label asp-for="Password" class="form-label"></label>
+                <span asp-validation-for="Password" class="text-danger"></span>
+                <div class="form-text small">De 8 a 128 caracteres con al menos una letra, un número y un carácter especial.</div>
+            </div>
+
+            <div class="form-floating mb-3">
+                <input asp-for="ConfirmPassword" class="form-control" placeholder="Confirmar contraseña" autocomplete="new-password" />
+                <label asp-for="ConfirmPassword" class="form-label"></label>
+                <span asp-validation-for="ConfirmPassword" class="text-danger"></span>
+            </div>
+
+            @if (!string.IsNullOrWhiteSpace(siteKey))
+            {
+                <div class="cf-turnstile d-flex justify-content-center mb-3" data-sitekey="@siteKey" data-theme="auto"></div>
+            }
+
+            <div class="d-flex justify-content-between small">
+                <a asp-action="VerifyRegistration" class="link-primary text-decoration-none">Ya tengo un código de verificación</a>
+                <a asp-action="Index" class="link-primary text-decoration-none">Iniciar sesión</a>
+            </div>
+        </div>
+        <div class="card-footer text-center">
+            <button id="submitButton" type="submit" class="btn btn-primary">Registrar cuenta</button>
+        </div>
+    </div>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script src="~/js/register.js" asp-append-version="true"></script>
+    @if (!string.IsNullOrWhiteSpace(siteKey))
+    {
+        <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+    }
+}

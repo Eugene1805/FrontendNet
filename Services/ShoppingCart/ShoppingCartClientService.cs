@@ -1,33 +1,47 @@
+using System.Net;
 using FrontendNet.Models;
+
 namespace FrontendNet.Services;
 
-/// <summary>Client for the persistent cart API.</summary>
+/// <summary>HTTP client for the backend persistent shopping cart API.</summary>
 public class ShoppingCartClientService(HttpClient client) : IShoppingCartService
 {
-    public async Task<ShoppingCart> GetAsync()
-        => await client.GetFromJsonAsync<ShoppingCart>("api/cart") ?? new ShoppingCart();
+    public async Task<ShoppingCart> GetAsync() =>
+        await client.GetFromJsonAsync<ShoppingCart>("api/cart") ?? new ShoppingCart();
 
-    public async Task<int> ContarAsync() => (await GetAsync()).Items.Sum(item => item.Quantity);
+    public async Task<int> GetCountAsync() =>
+        (await GetAsync()).Items.Sum(item => item.Quantity);
 
-    public async Task<ShoppingCart> AgregarAsync(int productoId, int cantidad)
+    public async Task<ShoppingCart> AddAsync(int productId, int quantity)
     {
-        using var response = await client.PostAsJsonAsync("api/cart/items", new { productId = productoId, quantity = cantidad });
+        using var response = await client.PostAsJsonAsync("api/cart/items", new { productId, quantity });
         return await response.Content.ReadFromJsonAsync<ShoppingCart>() ?? new ShoppingCart();
     }
 
-    public async Task<ShoppingCart> ActualizarAsync(int productoId, int cantidad)
+    public async Task<ShoppingCart> UpdateAsync(int productId, int quantity)
     {
-        using var response = await client.PutAsJsonAsync($"api/cart/items/{productoId}", new { quantity = cantidad });
+        using var response = await client.PutAsJsonAsync($"api/cart/items/{productId}", new { quantity });
         return await response.Content.ReadFromJsonAsync<ShoppingCart>() ?? new ShoppingCart();
     }
 
-    public async Task QuitarAsync(int productoId)
+    public async Task RemoveAsync(int productId)
     {
-        using var response = await client.DeleteAsync($"api/cart/items/{productoId}");
+        using var response = await client.DeleteAsync($"api/cart/items/{productId}");
     }
 
-    public async Task VaciarAsync()
+    public async Task ClearAsync()
     {
-        using var response = await client.DeleteAsync("api/cart");
+        var cart = await GetAsync();
+        foreach (var item in cart.Items)
+        {
+            try
+            {
+                await RemoveAsync(item.ProductId);
+            }
+            catch (ApiException ex) when (ex.StatusCode == HttpStatusCode.NotFound)
+            {
+                // Ignore lines that were already removed concurrently.
+            }
+        }
     }
 }

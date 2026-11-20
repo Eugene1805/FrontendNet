@@ -1,4 +1,3 @@
-@using System.Security.Claims
 @{
     ViewData["Title"] = "Inicio";
 }
@@ -7,23 +6,23 @@
     <div id="carouselExample" class="carousel slide" style="margin-top: -1rem;">
         <div class="carousel-indicators">
             <button type="button" data-bs-target="#carouselExample" data-bs-slide-to="0" class="active"
-                    aria-current="true" aria-label="Slide 1"></button>
-            <button type="button" data-bs-target="#carouselExample" data-bs-slide-to="1" aria-label="Slide 2"></button>
-            <button type="button" data-bs-target="#carouselExample" data-bs-slide-to="2" aria-label="Slide 3"></button>
-            <button type="button" data-bs-target="#carouselExample" data-bs-slide-to="3" aria-label="Slide 4"></button>
+                    aria-current="true" aria-label="Diapositiva 1"></button>
+            <button type="button" data-bs-target="#carouselExample" data-bs-slide-to="1" aria-label="Diapositiva 2"></button>
+            <button type="button" data-bs-target="#carouselExample" data-bs-slide-to="2" aria-label="Diapositiva 3"></button>
+            <button type="button" data-bs-target="#carouselExample" data-bs-slide-to="3" aria-label="Diapositiva 4"></button>
         </div>
         <div class="carousel-inner">
             <div class="carousel-item active">
-                <img src="~/images/carrusel1.webp" class="d-block w-100" alt="Imagen 1">
+                <img src="~/images/carousel1.webp" class="d-block w-100" alt="Promoción destacada 1">
             </div>
             <div class="carousel-item">
-                <img src="~/images/carrusel2.webp" class="d-block w-100" alt="Imagen 2">
+                <img src="~/images/carousel2.webp" class="d-block w-100" alt="Promoción destacada 2">
             </div>
             <div class="carousel-item">
-                <img src="~/images/carrusel3.webp" class="d-block w-100" alt="Imagen 3">
+                <img src="~/images/carousel3.webp" class="d-block w-100" alt="Promoción destacada 3">
             </div>
             <div class="carousel-item">
-                <img src="~/images/carrusel4.webp" class="d-block w-100" alt="Imagen 4">
+                <img src="~/images/carousel4.webp" class="d-block w-100" alt="Promoción destacada 4">
             </div>
         </div>
         <button class="carousel-control-prev" type="button" data-bs-target="#carouselExample" data-bs-slide="prev">
@@ -50,18 +49,25 @@
                 productos y servicios, a precio fijo.</p>
             @if (User.Identity?.IsAuthenticated == true)
             {
-                if (User.IsInRole("Usuario") || User.IsInRole("BUYER"))
+                if (User.IsInRole(Roles.Buyer))
                 {
-                    <a asp-controller="Shopping" class="btn btn-primary">Comenzar a comprar</a>
+                    <a asp-controller="Shopping" asp-action="Index" class="btn btn-primary">Comenzar a comprar</a>
                 }
-                else if (User.IsInRole("Administrador") || User.IsInRole("ADMIN"))
+                else if (User.IsInRole(Roles.Seller))
                 {
-                    <a asp-controller="Products" class="btn btn-primary">Administrar catálogos</a>
+                    <a asp-controller="Products" asp-action="Index" class="btn btn-primary">Administrar mis productos</a>
+                }
+                else if (User.IsInRole(Roles.Admin))
+                {
+                    <a asp-controller="Orders" asp-action="Index" class="btn btn-primary">Administrar pedidos</a>
                 }
             }
             else
             {
-                <a asp-controller="Auth" class="btn btn-primary">Iniciar sesión</a>
+                <div class="d-flex gap-2 flex-wrap">
+                    <a asp-controller="Auth" asp-action="Index" class="btn btn-primary">Iniciar sesión</a>
+                    <a asp-controller="Auth" asp-action="Register" class="btn btn-outline-primary">Crear cuenta</a>
+                </div>
             }
         </div>
     </div>

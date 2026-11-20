@@ -6,6 +6,7 @@ public class Login
 {
     [Required(ErrorMessage = "El campo {0} es obligatorio.")]
     [EmailAddress(ErrorMessage = "El campo {0} no es un correo electrónico válido.")]
+    [StringLength(254, ErrorMessage = "El campo {0} admite un máximo de {1} caracteres.")]
     [Display(Name = "Correo electrónico")]
     public required string Email { get; set; }
 
