@@ -82,6 +82,8 @@ public class ProductsController(
         if (IsUnapprovedSeller())
             return View("SellerPending");
 
+        NormalizeNumericOverflowErrors();
+
         if (model.Image is not null)
         {
             var imageError = ImageUploadValidator.Validate(model.Image, configuration);
@@ -155,6 +157,8 @@ public class ProductsController(
 
         if (id != model.ProductId) return NotFound();
 
+        NormalizeNumericOverflowErrors();
+
         if (ModelState.IsValid)
         {
             try
@@ -182,6 +186,35 @@ public class ProductsController(
         }
 
         return View("Edit", model);
+    }
+
+    private void NormalizeNumericOverflowErrors()
+    {
+        if (ModelState.TryGetValue(nameof(ProductFormModel.Stock), out var stockEntry))
+        {
+            var raw = stockEntry.AttemptedValue?.Trim();
+            if (!string.IsNullOrEmpty(raw) &&
+                System.Text.RegularExpressions.Regex.IsMatch(raw, @"^-?\d+$") &&
+                !int.TryParse(raw, System.Globalization.NumberStyles.Integer, System.Globalization.CultureInfo.InvariantCulture, out _))
+            {
+                stockEntry.Errors.Clear();
+                stockEntry.Errors.Add(raw.StartsWith('-')
+                    ? "Las existencias deben ser mayores a 0."
+                    : "El número de existencias es demasiado grande (máximo 2,147,483,647).");
+            }
+        }
+
+        if (ModelState.TryGetValue(nameof(ProductFormModel.Price), out var priceEntry))
+        {
+            var raw = priceEntry.AttemptedValue?.Trim();
+            if (!string.IsNullOrEmpty(raw) &&
+                System.Text.RegularExpressions.Regex.IsMatch(raw, @"^\d+(\.\d+)?$") &&
+                !decimal.TryParse(raw, System.Globalization.NumberStyles.Number, System.Globalization.CultureInfo.InvariantCulture, out _))
+            {
+                priceEntry.Errors.Clear();
+                priceEntry.Errors.Add("El precio es demasiado grande (máximo 9,999,999,999.99).");
+            }
+        }
     }
 
     [HttpPost]

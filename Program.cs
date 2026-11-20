@@ -109,7 +109,6 @@ var app = builder.Build();
 app.UseForwardedHeaders();
 app.UseExceptionHandler("/Home/Error");
 app.UseStatusCodePagesWithReExecute("/Home/Status/{0}");
-
 if (requireHttps)
 {
     app.UseHsts();

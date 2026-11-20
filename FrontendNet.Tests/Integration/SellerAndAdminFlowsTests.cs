@@ -261,4 +261,44 @@ public class SellerAndAdminFlowsTests
         Assert.Contains("No fue posible comunicarse con el servidor", html);
         Assert.DoesNotContain("Simulated network outage", html);
     }
+
+    [Fact]
+    public async Task ApprovedSeller_CreateProduct_RejectsZeroPriceZeroStock_AndStockOverflowShowsSpecificError()
+    {
+        await using var factory = new FrontendWebApplicationFactory();
+        using var client = factory.CreateBrowserClient();
+
+        await factory.LoginAsync(client, "seller@uv.mx", "Seller#1234");
+
+        var overflowResp = await factory.PostFormWithAntiforgeryAsync(
+            client,
+            "/Products/Create",
+            "/Products/Create",
+            [
+                new("Title", "Producto Prueba"),
+                new("Description", "Descripción válida"),
+                new("Price", "100.00"),
+                new("Stock", "999999999999")
+            ]);
+        Assert.Equal(HttpStatusCode.OK, overflowResp.StatusCode);
+        var overflowHtml = FrontendWebApplicationFactory.DecodeHtml(await overflowResp.Content.ReadAsStringAsync());
+        Assert.Contains(">El número de existencias es demasiado grande (máximo 2,147,483,647).</span>", overflowHtml);
+        Assert.DoesNotContain(">Las existencias deben ser mayores a 0", overflowHtml);
+
+        var zeroResp = await factory.PostFormWithAntiforgeryAsync(
+            client,
+            "/Products/Create",
+            "/Products/Create",
+            [
+                new("Title", "Producto Cero"),
+                new("Description", "Descripción válida"),
+                new("Price", "0"),
+                new("Stock", "0")
+            ]);
+        Assert.Equal(HttpStatusCode.OK, zeroResp.StatusCode);
+        var zeroHtml = FrontendWebApplicationFactory.DecodeHtml(await zeroResp.Content.ReadAsStringAsync());
+        Assert.Contains("mayor a 0", zeroHtml);
+        Assert.Contains("mayores a 0", zeroHtml);
+        Assert.DoesNotContain(factory.Backend.Products.Values, p => p.Title == "Producto Cero");
+    }
 }

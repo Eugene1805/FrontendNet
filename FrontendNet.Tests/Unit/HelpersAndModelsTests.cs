@@ -117,5 +117,23 @@ public class HelpersAndModelsTests
         };
         var resultsValid = new List<ValidationResult>();
         Assert.True(Validator.TryValidateObject(validModel, new ValidationContext(validModel), resultsValid, true));
+
+        var zeroPrice = new ProductFormModel
+        {
+            Title = "Teclado",
+            Description = "Descripción válida",
+            Price = 0m,
+            Stock = 1
+        };
+        Assert.False(Validator.TryValidateObject(zeroPrice, new ValidationContext(zeroPrice), [], true));
+
+        var zeroStock = new ProductFormModel
+        {
+            Title = "Teclado",
+            Description = "Descripción válida",
+            Price = 10m,
+            Stock = 0
+        };
+        Assert.False(Validator.TryValidateObject(zeroStock, new ValidationContext(zeroStock), [], true));
     }
 }

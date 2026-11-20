@@ -22,13 +22,13 @@ public class ProductFormModel : IValidatableObject
     public string Description { get; set; } = string.Empty;
 
     [Required(ErrorMessage = "El campo {0} es obligatorio.")]
-    [Range(typeof(decimal), "0", "9999999999.99", ErrorMessage = "El campo {0} debe ser mayor o igual a 0.")]
+    [Range(typeof(decimal), "0.01", "9999999999.99", ErrorMessage = "El precio debe ser mayor a 0 (entre 0.01 y 9,999,999,999.99).")]
     [RegularExpression(@"^\d{1,10}(\.\d{1,2})?$", ErrorMessage = "El precio debe tener hasta 2 decimales.")]
     [Display(Name = "Precio")]
     public decimal Price { get; set; }
 
     [Required(ErrorMessage = "El campo {0} es obligatorio.")]
-    [Range(0, int.MaxValue, ErrorMessage = "Las existencias deben ser mayores o iguales a 0.")]
+    [Range(1, int.MaxValue, ErrorMessage = "Las existencias deben ser mayores a 0 (máximo 2,147,483,647).")]
     [Display(Name = "Existencias")]
     public int Stock { get; set; }
 
