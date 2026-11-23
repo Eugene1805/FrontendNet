@@ -45,12 +45,15 @@ builder.Services.AddTransient<BearerTokenDelegatingHandler>();
 builder.Services.AddTransient<RefreshTokenDelegatingHandler>();
 builder.Services.AddHttpClient<CloudflareTurnstileService>();
 
-// Configure forwarded headers for Cloudflare proxies when trusted proxy CIDRs are configured.
+// Configure forwarded headers for reverse proxies (Apache X-Forwarded-For by default, or Cloudflare CF-Connecting-IP) when trusted proxy CIDRs are configured.
 builder.Services.Configure<ForwardedHeadersOptions>(options =>
 {
     options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
-    options.ForwardedForHeaderName = "CF-Connecting-IP";
-    options.ForwardedProtoHeaderName = "X-Forwarded-Proto";
+    var forwardedForHeader = builder.Configuration["Security:ForwardedForHeaderName"];
+    options.ForwardedForHeaderName = string.IsNullOrWhiteSpace(forwardedForHeader)
+        ? ForwardedHeadersDefaults.XForwardedForHeaderName
+        : forwardedForHeader.Trim();
+    options.ForwardedProtoHeaderName = ForwardedHeadersDefaults.XForwardedProtoHeaderName;
 
     var trustedCidrs = builder.Configuration.GetSection("Security:TrustedProxyCidrs").Get<string[]>();
     if (trustedCidrs is { Length: > 0 })
