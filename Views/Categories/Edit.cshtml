@@ -26,7 +26,7 @@
                 <label asp-for="CategoryId" class="form-label"></label>
             </div>
             <div class="form-floating mb-3">
-                <input asp-for="Name" placeholder="Nombre" class="form-control" />
+                <input asp-for="Name" maxlength="120" placeholder="Nombre" class="form-control" />
                 <label asp-for="Name" class="form-label"></label>
                 <span asp-validation-for="Name" class="text-danger"></span>
             </div>

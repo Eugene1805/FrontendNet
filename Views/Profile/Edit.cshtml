@@ -23,19 +23,19 @@
     <div class="card mt-3">
         <div class="card-body small">
             <div class="form-floating mb-3">
-                <input asp-for="Name" placeholder="Nombre" class="form-control" />
+                <input asp-for="Name" maxlength="120" placeholder="Nombre" class="form-control" />
                 <label asp-for="Name" class="form-label"></label>
                 <span asp-validation-for="Name" class="text-danger"></span>
             </div>
             <div class="form-floating mb-3">
-                <input asp-for="PhoneNumber" placeholder="Teléfono" class="form-control" />
+                <input asp-for="PhoneNumber" maxlength="20" placeholder="Teléfono" class="form-control" />
                 <label asp-for="PhoneNumber" class="form-label"></label>
                 <span asp-validation-for="PhoneNumber" class="text-danger"></span>
             </div>
             @if (isSeller)
             {
                 <div class="form-floating mb-3">
-                    <input asp-for="StoreName" placeholder="Nombre de la tienda" class="form-control" />
+                    <input asp-for="StoreName" maxlength="120" placeholder="Nombre de la tienda" class="form-control" />
                     <label asp-for="StoreName" class="form-label"></label>
                     <span asp-validation-for="StoreName" class="text-danger"></span>
                 </div>

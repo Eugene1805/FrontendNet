@@ -13,12 +13,12 @@
             <h5 class="card-title text-center mt-4">@ViewData["Title"]</h5>
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
             <div class="form-floating mb-3">
-                <input asp-for="Email" class="form-control" placeholder="Correo electrónico" autocomplete="username">
+                <input asp-for="Email" maxlength="254" class="form-control" placeholder="Correo electrónico" autocomplete="username">
                 <label asp-for="Email" class="form-label"></label>
                 <span asp-validation-for="Email" class="text-danger"></span>
             </div>
             <div class="form-floating mb-3">
-                <input asp-for="Password" class="form-control" placeholder="Contraseña" autocomplete="current-password">
+                <input asp-for="Password" maxlength="128" class="form-control" placeholder="Contraseña" autocomplete="current-password">
                 <label asp-for="Password" class="form-label"></label>
                 <span asp-validation-for="Password" class="text-danger"></span>
             </div>

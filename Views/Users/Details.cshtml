@@ -31,8 +31,10 @@
                     <form asp-action="RejectSeller" method="post" class="d-flex gap-2 align-items-center flex-wrap">
                         <input type="hidden" name="userId" value="@Model.Id" />
                         <input type="hidden" name="email" value="@Model.Email" />
-                        <input type="text" name="rejectionReason" maxlength="255" required class="form-control form-control-sm"
-                               style="min-width: 240px;" placeholder="Motivo de rechazo" aria-label="Motivo de rechazo" />
+                        <input type="text" name="rejectionReason" minlength="1" maxlength="255" pattern=".*\S.*" required
+                               title="Indique el motivo de rechazo (entre 1 y 255 caracteres)."
+                               class="form-control form-control-sm"
+                               style="min-width: 240px;" placeholder="Motivo de rechazo (máx. 255)" aria-label="Motivo de rechazo" />
                         <button type="submit" class="btn btn-sm btn-outline-danger">Rechazar vendedor</button>
                     </form>
                 </div>
@@ -42,8 +44,10 @@
                 <form asp-action="SuspendSeller" method="post" class="d-flex gap-2 align-items-center flex-wrap mt-2">
                     <input type="hidden" name="userId" value="@Model.Id" />
                     <input type="hidden" name="email" value="@Model.Email" />
-                    <input type="text" name="reason" maxlength="255" required class="form-control form-control-sm"
-                           style="min-width: 260px;" placeholder="Motivo de suspensión" aria-label="Motivo de suspensión" />
+                    <input type="text" name="reason" minlength="1" maxlength="255" pattern=".*\S.*" required
+                           title="Indique el motivo de suspensión (entre 1 y 255 caracteres)."
+                           class="form-control form-control-sm"
+                           style="min-width: 260px;" placeholder="Motivo de suspensión (máx. 255)" aria-label="Motivo de suspensión" />
                     <button type="submit" class="btn btn-sm btn-outline-warning">Suspender vendedor</button>
                 </form>
             }
