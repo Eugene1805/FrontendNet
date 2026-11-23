@@ -23,38 +23,38 @@
             </div>
 
             <div class="form-floating mb-3">
-                <input asp-for="Name" class="form-control" placeholder="Nombre completo" autocomplete="name" />
+                <input asp-for="Name" maxlength="120" class="form-control" placeholder="Nombre completo" autocomplete="name" />
                 <label asp-for="Name" class="form-label"></label>
                 <span asp-validation-for="Name" class="text-danger"></span>
             </div>
 
             <div id="storeNameGroup" class="form-floating mb-3 @(isSeller ? "" : "d-none")">
-                <input asp-for="StoreName" class="form-control" placeholder="Nombre de la tienda" />
+                <input asp-for="StoreName" maxlength="120" class="form-control" placeholder="Nombre de la tienda" />
                 <label asp-for="StoreName" class="form-label"></label>
                 <span asp-validation-for="StoreName" class="text-danger"></span>
             </div>
 
             <div class="form-floating mb-3">
-                <input asp-for="Email" class="form-control" placeholder="Correo electrónico" autocomplete="email" />
+                <input asp-for="Email" maxlength="254" class="form-control" placeholder="Correo electrónico" autocomplete="email" />
                 <label asp-for="Email" class="form-label"></label>
                 <span asp-validation-for="Email" class="text-danger"></span>
             </div>
 
             <div class="form-floating mb-3">
-                <input asp-for="PhoneNumber" class="form-control" placeholder="Teléfono" autocomplete="tel" />
+                <input asp-for="PhoneNumber" maxlength="20" class="form-control" placeholder="Teléfono" autocomplete="tel" />
                 <label asp-for="PhoneNumber" class="form-label"></label>
                 <span asp-validation-for="PhoneNumber" class="text-danger"></span>
             </div>
 
             <div class="form-floating mb-3">
-                <input asp-for="Password" class="form-control" placeholder="Contraseña" autocomplete="new-password" />
+                <input asp-for="Password" minlength="8" maxlength="128" class="form-control" placeholder="Contraseña" autocomplete="new-password" />
                 <label asp-for="Password" class="form-label"></label>
                 <span asp-validation-for="Password" class="text-danger"></span>
                 <div class="form-text small">De 8 a 128 caracteres con al menos una letra, un número y un carácter especial.</div>
             </div>
 
             <div class="form-floating mb-3">
-                <input asp-for="ConfirmPassword" class="form-control" placeholder="Confirmar contraseña" autocomplete="new-password" />
+                <input asp-for="ConfirmPassword" minlength="8" maxlength="128" class="form-control" placeholder="Confirmar contraseña" autocomplete="new-password" />
                 <label asp-for="ConfirmPassword" class="form-label"></label>
                 <span asp-validation-for="ConfirmPassword" class="text-danger"></span>
             </div>

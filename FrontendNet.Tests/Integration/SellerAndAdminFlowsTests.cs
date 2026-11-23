@@ -311,4 +311,39 @@ public class SellerAndAdminFlowsTests
         Assert.Contains("mayores a 0", zeroHtml);
         Assert.DoesNotContain(factory.Backend.Products.Values, p => p.Title == "Producto Cero");
     }
+
+    [Fact]
+    public async Task Seller_OrderCancelReason_RejectsOver255Chars()
+    {
+        await using var factory = new FrontendWebApplicationFactory();
+        using var client = factory.CreateBrowserClient();
+
+        await factory.LoginAsync(client, "seller@uv.mx", "Seller#1234");
+
+        factory.Backend.Orders.Add(new Order
+        {
+            Id = "901",
+            BuyerId = factory.Backend.UsersByEmail["buyer@uv.mx"].Id,
+            SellerId = factory.Backend.UsersByEmail["seller@uv.mx"].Id,
+            Status = OrderStatus.Pending,
+            Total = "1250.00",
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow,
+            Items = [new OrderItem { Id = "1", OrderId = "901", ProductId = 1, ProductTitle = "Teclado Mecánico", Quantity = 1, UnitPrice = "1250.00" }]
+        });
+
+        var overReasonResp = await factory.PostFormWithAntiforgeryAsync(
+            client,
+            "/Orders/Details/901",
+            "/Orders/UpdateStatus/901",
+            [
+                new("status", OrderStatus.Canceled),
+                new("reason", new string('a', 256))
+            ]);
+        Assert.Equal(HttpStatusCode.Redirect, overReasonResp.StatusCode);
+        var detailsHtml = FrontendWebApplicationFactory.DecodeHtml(
+            await (await client.GetAsync("/Orders/Details/901")).Content.ReadAsStringAsync());
+        Assert.Contains("entre 1 y 255 caracteres", detailsHtml);
+        Assert.NotEqual(OrderStatus.Canceled, factory.Backend.Orders.First(o => o.Id == "901").Status);
+    }
 }

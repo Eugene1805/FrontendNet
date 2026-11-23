@@ -141,9 +141,9 @@ public class OrdersController(
     public async Task<IActionResult> CancelAsync(string id, string? reason)
     {
         var trimmedReason = reason?.Trim() ?? string.Empty;
-        if (trimmedReason.Length is < 1 or > 255)
+        if (trimmedReason.Length is < 1 or > 255 || trimmedReason.Any(char.IsControl))
         {
-            TempData["Error"] = "Indique el motivo de cancelación (entre 1 y 255 caracteres).";
+            TempData["Error"] = "Indique un motivo de cancelación válido (entre 1 y 255 caracteres).";
             return RedirectToAction(nameof(Details), new { id });
         }
 
@@ -172,9 +172,16 @@ public class OrdersController(
         var normalizedStatus = status?.Trim().ToUpperInvariant() ?? string.Empty;
         var trimmedReason = reason?.Trim();
 
-        if (normalizedStatus == OrderStatus.Canceled && string.IsNullOrWhiteSpace(trimmedReason))
+        if (normalizedStatus == OrderStatus.Canceled &&
+            (string.IsNullOrEmpty(trimmedReason) || trimmedReason.Length > 255 || trimmedReason.Any(char.IsControl)))
         {
-            TempData["Error"] = "Debe indicar un motivo para cancelar el pedido.";
+            TempData["Error"] = "Debe indicar un motivo válido para cancelar el pedido (entre 1 y 255 caracteres).";
+            return RedirectToAction(nameof(Details), new { id });
+        }
+
+        if (!string.IsNullOrEmpty(trimmedReason) && (trimmedReason.Length > 255 || trimmedReason.Any(char.IsControl)))
+        {
+            TempData["Error"] = "El motivo indicado no es válido (máximo 255 caracteres).";
             return RedirectToAction(nameof(Details), new { id });
         }
 

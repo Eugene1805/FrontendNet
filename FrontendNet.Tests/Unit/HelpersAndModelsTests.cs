@@ -136,4 +136,41 @@ public class HelpersAndModelsTests
         };
         Assert.False(Validator.TryValidateObject(zeroStock, new ValidationContext(zeroStock), [], true));
     }
+
+    [Fact]
+    public void AddressFormModel_ValidatesPostalCodeExteriorNumberCountryAndControlChars()
+    {
+        static AddressFormModel MakeValid() => new()
+        {
+            Label = "Casa",
+            RecipientName = "Ana López",
+            Street = "Av. Xalapa",
+            ExteriorNumber = "123-B",
+            InteriorNumber = "Depto 4",
+            Neighborhood = "Centro",
+            City = "Xalapa",
+            State = "Veracruz",
+            PostalCode = "91000",
+            Country = "MX"
+        };
+
+        var valid = MakeValid();
+        Assert.True(Validator.TryValidateObject(valid, new ValidationContext(valid), [], true));
+
+        var badPostal = MakeValid();
+        badPostal.PostalCode = "91";
+        Assert.False(Validator.TryValidateObject(badPostal, new ValidationContext(badPostal), [], true));
+
+        var badExterior = MakeValid();
+        badExterior.ExteriorNumber = "123<script>";
+        Assert.False(Validator.TryValidateObject(badExterior, new ValidationContext(badExterior), [], true));
+
+        var badCountry = MakeValid();
+        badCountry.Country = "MEX";
+        Assert.False(Validator.TryValidateObject(badCountry, new ValidationContext(badCountry), [], true));
+
+        var controlCharStreet = MakeValid();
+        controlCharStreet.Street = "Calle\nOculta";
+        Assert.False(Validator.TryValidateObject(controlCharStreet, new ValidationContext(controlCharStreet), [], true));
+    }
 }
