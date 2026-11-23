@@ -76,7 +76,19 @@
                             <img src="@imageSrc" alt="@item.Title" class="img-fluid img-thumbnail" style="max-height: 40px;">
                         </td>
                         <td>
-                            @item.Title<br />
+                            @item.Title
+                            @if (canManage)
+                            {
+                                @if (item.HasEffectiveImage)
+                                {
+                                    <span class="badge text-bg-success ms-1">Publicado</span>
+                                }
+                                else
+                                {
+                                    <span class="badge text-bg-warning text-dark ms-1">Borrador (sin imagen)</span>
+                                }
+                            }
+                            <br />
                             @if (!string.IsNullOrWhiteSpace(item.Description))
                             {
                                 <span class="text-secondary-emphasis small d-none d-md-block">@item.Description</span>

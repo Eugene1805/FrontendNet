@@ -33,10 +33,13 @@ public class SellerAndAdminFlowsTests
 
         await factory.LoginAsync(client, "seller@uv.mx", "Seller#1234");
 
-        // Own products only (does not show Monitor 27 Pulgadas owned by other-seller@uv.mx)
+        // Own products only (including own draft Mouse Inalámbrico with Borrador badge, excluding Monitor 27 Pulgadas)
         var indexHtml = FrontendWebApplicationFactory.DecodeHtml(
             await (await client.GetAsync("/Products")).Content.ReadAsStringAsync());
         Assert.Contains("Teclado Mecánico", indexHtml);
+        Assert.Contains("Mouse Inalámbrico", indexHtml);
+        Assert.Contains("Publicado", indexHtml);
+        Assert.Contains("Borrador (sin imagen)", indexHtml);
         Assert.DoesNotContain("Monitor 27 Pulgadas", indexHtml);
 
         // Cannot edit another seller's product
@@ -66,8 +69,9 @@ public class SellerAndAdminFlowsTests
         var editRedirectHtml = FrontendWebApplicationFactory.DecodeHtml(
             await (await client.GetAsync($"/Products/Edit/{createdId}")).Content.ReadAsStringAsync());
         Assert.Contains("no se pudo subir la imagen", editRedirectHtml);
+        Assert.Contains("Borrador sin imagen", editRedirectHtml);
 
-        // Retry image upload once Cloudinary is available
+        // Retry image upload once Cloudinary is available -> becomes Publicado
         factory.Backend.SimulateImageUploadError = null;
         var editToken = await factory.ExtractAntiforgeryTokenAsync(client, $"/Products/Edit/{createdId}");
         using var uploadForm = new MultipartFormDataContent();
@@ -79,6 +83,10 @@ public class SellerAndAdminFlowsTests
         var uploadResp = await client.PostAsync($"/Products/UploadImage/{createdId}", uploadForm);
         Assert.Equal(HttpStatusCode.Redirect, uploadResp.StatusCode);
         Assert.NotNull(factory.Backend.Products[createdId].ImageUrl);
+        var updatedIndexHtml = FrontendWebApplicationFactory.DecodeHtml(
+            await (await client.GetAsync("/Products?s=Webcam")).Content.ReadAsStringAsync());
+        Assert.Contains("Webcam HD", updatedIndexHtml);
+        Assert.Contains("Publicado", updatedIndexHtml);
 
         // Seed an order for seller@uv.mx and advance its status
         var sellerOrder = new Order
@@ -111,16 +119,18 @@ public class SellerAndAdminFlowsTests
 
         await factory.LoginAsync(client, "admin@uv.mx", "Admin#1234");
 
-        // Admin sees all products read-only (no Create link, explicit seller-account notice)
+        // Admin sees published products read-only (hides drafts without image such as Mouse Inalámbrico)
         // and cannot open product mutation routes (/Products/Create, Edit, Delete, Categories)
         var productsHtml = FrontendWebApplicationFactory.DecodeHtml(
             await (await client.GetAsync("/Products")).Content.ReadAsStringAsync());
         Assert.Contains("Teclado Mecánico", productsHtml);
         Assert.Contains("Monitor 27 Pulgadas", productsHtml);
+        Assert.DoesNotContain("Mouse Inalámbrico", productsHtml);
         Assert.DoesNotContain("Crear nuevo", productsHtml);
         Assert.Contains(
             "Los administradores no publican productos; para publicar o editar artículos se requiere una cuenta de vendedor aprobada",
             productsHtml);
+        Assert.Equal(HttpStatusCode.NotFound, (await client.GetAsync("/Products/Details/2")).StatusCode);
 
         foreach (var restrictedPath in new[]
                  {

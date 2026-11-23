@@ -95,6 +95,10 @@ public class ApiClientContractTests
             CategoryId = 1
         });
         Assert.NotNull(created?.ProductId);
+        Assert.False(created!.HasImage);
+
+        var draftForSeller = await productClient.GetAsync(created.ProductId.Value);
+        Assert.False(draftForSeller!.HasImage);
 
         await productClient.UpdateAsync(created!.ProductId!.Value, new ProductFormModel
         {
@@ -119,8 +123,20 @@ public class ApiClientContractTests
         var imgResp = await productClient.UploadImageAsync(created.ProductId.Value, jpeg);
         Assert.Contains("res.cloudinary.com", imgResp!.ImageUrl);
 
+        var publishedForSeller = await productClient.GetAsync(created.ProductId.Value);
+        Assert.True(publishedForSeller!.HasImage);
+
         await productClient.DeleteImageAsync(created.ProductId.Value);
         Assert.Contains(backend.Requests, r => r.Method == "DELETE" && r.PathAndQuery == $"/api/products/{created.ProductId}/image");
+        var afterDelete = await productClient.GetAsync(created.ProductId.Value);
+        Assert.False(afterDelete!.HasImage);
+
+        // Verify buyer view after seller operations (CreateClients overwrites HttpContextAccessor AsyncLocal)
+        var (buyerSp, _, _) = CreateClients(backend, backend.UsersByEmail["buyer@uv.mx"]);
+        var buyerProductClient = buyerSp.GetRequiredService<ProductClientService>();
+        var buyerList = await buyerProductClient.GetAsync();
+        Assert.DoesNotContain(buyerList!, p => p.ProductId == 2 || p.ProductId == created.ProductId.Value);
+        Assert.All(buyerList!, p => Assert.Null(p.HasImage));
     }
 
     [Fact]

@@ -40,6 +40,8 @@ public class ProductFormModel : IValidatableObject
 
     public string? CurrentImageUrl { get; set; }
 
+    public bool HasImage { get; set; }
+
     public static ProductFormModel FromProduct(Product product) => new()
     {
         ProductId = product.ProductId,
@@ -47,7 +49,8 @@ public class ProductFormModel : IValidatableObject
         Description = product.Description ?? string.Empty,
         Price = product.Price,
         Stock = product.Stock,
-        CurrentImageUrl = product.ImageUrl
+        CurrentImageUrl = product.ImageUrl,
+        HasImage = product.HasEffectiveImage
     };
 
     public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)

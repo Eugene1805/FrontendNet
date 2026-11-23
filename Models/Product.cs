@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 
 namespace FrontendNet.Models;
 
@@ -31,6 +32,12 @@ public class Product
 
     [Display(Name = "Imagen")]
     public string? ImageUrl { get; set; }
+
+    [Display(Name = "Estado de imagen")]
+    public bool? HasImage { get; set; }
+
+    [JsonIgnore]
+    public bool HasEffectiveImage => HasImage ?? !string.IsNullOrWhiteSpace(ImagePublicId);
 
     public ICollection<Category>? Categories { get; set; }
 }

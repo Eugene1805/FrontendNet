@@ -106,13 +106,13 @@ public class ProductsController(
                     catch (Exception imgEx) when (IsApiError(imgEx))
                     {
                         TempData["Error"] =
-                            $"El producto se creó correctamente, pero no se pudo subir la imagen: {GetUserMessage(imgEx)}";
+                            $"El producto se creó como borrador, pero no se pudo subir la imagen: {GetUserMessage(imgEx)}";
                         return RedirectToAction(nameof(Edit), new { id = newProductId });
                     }
                 }
                 else
                 {
-                    TempData["Success"] = "Producto creado correctamente.";
+                    TempData["Success"] = "Producto guardado como borrador (sin imagen). Sube una imagen para hacerlo visible en la tienda.";
                 }
 
                 return RedirectToAction(nameof(Index));
@@ -178,7 +178,10 @@ public class ProductsController(
         {
             var current = await products.GetAsync(id);
             if (current is not null)
+            {
                 model.CurrentImageUrl = current.ImageUrl;
+                model.HasImage = current.HasEffectiveImage;
+            }
         }
         catch (Exception ex) when (IsApiError(ex))
         {
@@ -256,7 +259,7 @@ public class ProductsController(
         try
         {
             await products.DeleteImageAsync(id);
-            TempData["Success"] = "Imagen del producto eliminada correctamente.";
+            TempData["Success"] = "Imagen del producto eliminada. El producto quedó como borrador y no es visible para compradores hasta subir una nueva imagen.";
         }
         catch (Exception ex) when (IsApiError(ex))
         {
