@@ -66,3 +66,6 @@ Thumbs.db
 CLAUDE.md
 ## Project documentation (kept local)
 docs/
+
+## Internal LAN TLS bundles (mounted into VM 1 container)
+.certs/

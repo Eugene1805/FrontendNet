@@ -1,0 +1,17 @@
+[Bb]in/
+[Oo]bj/
+FrontendNet.Tests/
+TestResults/
+.git/
+.gitignore
+.vs/
+.vscode/
+.idea/
+.certs/
+appsettings.Development.json
+appsettings.Local.json
+.env
+.env.*
+docs/
+*.user
+*.suo

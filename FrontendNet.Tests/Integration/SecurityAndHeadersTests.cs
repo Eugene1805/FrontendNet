@@ -1,6 +1,9 @@
 using System.Net;
 using System.Text.RegularExpressions;
 using FrontendNet.Tests.Support;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 
 namespace FrontendNet.Tests.Integration;
 
@@ -118,6 +121,25 @@ public partial class SecurityAndHeadersTests
         var authCookie = Assert.Single(setCookies, c => c.StartsWith(".frontendnet=", StringComparison.Ordinal));
         Assert.Contains("httponly", authCookie, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("samesite=lax", authCookie, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public async Task ForwardedHeaders_UsesXForwardedForByDefault_AndRespectsCustomHeaderName()
+    {
+        await using var defaultFactory = new FrontendWebApplicationFactory();
+        var defaultOptions = defaultFactory.Services
+            .GetRequiredService<IOptions<ForwardedHeadersOptions>>()
+            .Value;
+        Assert.Equal("X-Forwarded-For", defaultOptions.ForwardedForHeaderName);
+        Assert.Equal("X-Forwarded-Proto", defaultOptions.ForwardedProtoHeaderName);
+
+        await using var cfFactory = defaultFactory.WithWebHostBuilder(builder =>
+            builder.UseSetting("Security:ForwardedForHeaderName", "CF-Connecting-IP"));
+        var cfOptions = cfFactory.Services
+            .GetRequiredService<IOptions<ForwardedHeadersOptions>>()
+            .Value;
+        Assert.Equal("CF-Connecting-IP", cfOptions.ForwardedForHeaderName);
+        Assert.Equal("X-Forwarded-Proto", cfOptions.ForwardedProtoHeaderName);
     }
 
     [GeneratedRegex(@"<script(?![^>]*\bsrc=)[^>]*>", RegexOptions.IgnoreCase)]

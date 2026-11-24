@@ -22,12 +22,22 @@ public class BuyerFlowsTests
                 Description = "Item extra",
                 Price = 100m + i,
                 Stock = 5,
+                ImagePublicId = $"products/gadget-{i}",
+                ImageUrl = $"https://res.cloudinary.com/demo/image/upload/v1/gadget-{i}.jpg",
                 Categories = [factory.Backend.Categories[2]]
             };
         }
 
         using var client = factory.CreateBrowserClient();
         await factory.LoginAsync(client, "buyer@uv.mx", "Buyer#1234");
+
+        // Buyer must NOT see imageless draft product #2 (Mouse Inalámbrico) in list or detail
+        var listResp = await client.GetAsync("/Shopping?s=Mouse");
+        Assert.Equal(HttpStatusCode.OK, listResp.StatusCode);
+        var listHtml = FrontendWebApplicationFactory.DecodeHtml(await listResp.Content.ReadAsStringAsync());
+        Assert.DoesNotContain("Mouse Inalámbrico", listHtml);
+        var draftDetailResp = await client.GetAsync("/Shopping/Details/2");
+        Assert.Equal(HttpStatusCode.NotFound, draftDetailResp.StatusCode);
 
         var searchResp = await client.GetAsync("/Shopping?s=Gadget+%2310+%26+Pro");
         Assert.Equal(HttpStatusCode.OK, searchResp.StatusCode);

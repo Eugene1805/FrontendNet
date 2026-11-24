@@ -157,12 +157,13 @@ public sealed partial class FakeBackendHandler(FakeBackendState state) : HttpMes
         if (method == "GET" && path == "/api/products")
         {
             var search = query.TryGetValue("s", out var sVal) ? sVal : null;
+            var includeHasImage = user.Profile == Roles.Seller;
             var visible = state.Products.Values
-                .Where(IsProductVisible)
+                .Where(p => IsProductVisibleInCatalog(p, user))
                 .Where(p => string.IsNullOrWhiteSpace(search) ||
                             p.Title.Contains(search, StringComparison.OrdinalIgnoreCase))
                 .OrderBy(p => p.ProductId)
-                .Select(SerializeProduct)
+                .Select(p => SerializeProduct(p, includeHasImage))
                 .ToList();
             return JsonResponse(HttpStatusCode.OK, visible);
         }
@@ -608,7 +609,7 @@ public sealed partial class FakeBackendHandler(FakeBackendState state) : HttpMes
             Categories = cats
         };
         state.Products[prod.ProductId.Value] = prod;
-        return JsonResponse(HttpStatusCode.Created, SerializeProduct(prod));
+        return JsonResponse(HttpStatusCode.Created, SerializeProduct(prod, includeHasImage: true));
     }
 
     private HttpResponseMessage HandleProductSubroutes(
@@ -629,8 +630,8 @@ public sealed partial class FakeBackendHandler(FakeBackendState state) : HttpMes
         if (parts.Length == 1)
         {
             if (method == "GET")
-                return IsProductVisible(product)
-                    ? JsonResponse(HttpStatusCode.OK, SerializeProduct(product))
+                return IsProductVisibleInCatalog(product, user)
+                    ? JsonResponse(HttpStatusCode.OK, SerializeProduct(product, includeHasImage: user.Profile == Roles.Seller))
                     : ErrorResponse(HttpStatusCode.NotFound, "Producto no encontrado.");
 
             if (user.Profile != Roles.Seller || product.SellerId != user.Id)
@@ -1384,6 +1385,12 @@ public sealed partial class FakeBackendHandler(FakeBackendState state) : HttpMes
                seller.SellerStatus == SellerStatuses.Approved;
     }
 
+    private bool IsProductVisibleInCatalog(Product product, FakeUserRecord actor) =>
+        IsProductVisible(product) &&
+        (!string.IsNullOrWhiteSpace(product.ImagePublicId) ||
+         (actor.Profile == Roles.Seller &&
+          string.Equals(product.SellerId, actor.Id, StringComparison.OrdinalIgnoreCase)));
+
     private object SerializeCart(Dictionary<int, int> cart)
     {
         decimal total = 0m;
@@ -1481,18 +1488,24 @@ public sealed partial class FakeBackendHandler(FakeBackendState state) : HttpMes
         return dict;
     }
 
-    private static object SerializeProduct(Product product) => new
+    private static Dictionary<string, object?> SerializeProduct(Product product, bool includeHasImage = false)
     {
-        productId = product.ProductId,
-        sellerId = product.SellerId,
-        title = product.Title,
-        description = product.Description,
-        price = product.Price.ToString("0.00", CultureInfo.InvariantCulture),
-        stock = product.Stock,
-        imagePublicId = product.ImagePublicId,
-        imageUrl = product.ImageUrl,
-        categories = product.Categories ?? []
-    };
+        var dto = new Dictionary<string, object?>
+        {
+            ["productId"] = product.ProductId,
+            ["sellerId"] = product.SellerId,
+            ["title"] = product.Title,
+            ["description"] = product.Description,
+            ["price"] = product.Price.ToString("0.00", CultureInfo.InvariantCulture),
+            ["stock"] = product.Stock,
+            ["imagePublicId"] = product.ImagePublicId,
+            ["imageUrl"] = product.ImageUrl,
+            ["categories"] = product.Categories ?? []
+        };
+        if (includeHasImage)
+            dto["hasImage"] = !string.IsNullOrWhiteSpace(product.ImagePublicId);
+        return dto;
+    }
 
     private static bool TryParseObject(string? body, out JsonElement root)
     {

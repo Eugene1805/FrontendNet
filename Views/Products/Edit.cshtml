@@ -32,6 +32,13 @@
                 <button type="submit" class="btn btn-sm btn-outline-primary w-100">Subir imagen</button>
             </form>
 
+            @if (!Model.HasImage || string.IsNullOrWhiteSpace(Model.CurrentImageUrl))
+            {
+                <div class="alert alert-warning small py-2 mt-2 mb-0 text-start" role="status">
+                    Borrador sin imagen: este producto no es visible para compradores ni administradores hasta subir una imagen.
+                </div>
+            }
+
             @if (!string.IsNullOrWhiteSpace(Model.CurrentImageUrl))
             {
                 <form asp-action="DeleteImage" asp-route-id="@Model.ProductId" method="post" class="mt-2">

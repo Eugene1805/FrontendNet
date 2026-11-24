@@ -18,7 +18,20 @@
                 </div>
                 <div class="mb-3 ps-3">
                     <label asp-for="Title" class="form-label form-text"></label>
-                    <div class="form-text text-body">@Model.Title</div>
+                    <div class="form-text text-body">
+                        @Model.Title
+                        @if (Model.HasImage.HasValue)
+                        {
+                            @if (Model.HasEffectiveImage)
+                            {
+                                <span class="badge text-bg-success ms-1">Publicado</span>
+                            }
+                            else
+                            {
+                                <span class="badge text-bg-warning text-dark ms-1">Borrador (sin imagen)</span>
+                            }
+                        }
+                    </div>
                 </div>
                 <div class="mb-3 ps-3">
                     <label asp-for="Price" class="form-label form-text"></label>
