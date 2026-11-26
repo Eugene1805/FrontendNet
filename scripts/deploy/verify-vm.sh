@@ -113,8 +113,8 @@ else
   record_fail "container_extra_hosts_api"
 fi
 
-# 7. Salud HTTP en loopback del contenedor
-check_cmd "frontend_loopback_health" curl -fsS -o /dev/null --max-time 5 http://127.0.0.1:5000/Home/Status
+# 7. Salud HTTP en loopback del contenedor (simula X-Forwarded-Proto de Apache para evitar redirección HTTPS en sonda local)
+check_cmd "frontend_loopback_health" curl -fsS -o /dev/null --max-time 5 -H "X-Forwarded-Proto: https" http://127.0.0.1:5000/
 
 # 8. Puertos en escucha y enlace estricto en 127.0.0.1:5000
 SS_OUT="$(ss -tulpn 2>/dev/null || true)"
