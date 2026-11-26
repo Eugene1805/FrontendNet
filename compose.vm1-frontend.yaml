@@ -27,6 +27,7 @@ services:
         read_only: true
         bind:
           create_host_path: false
+      - frontend_dataprotection:/home/app/.aspnet/DataProtection-Keys
     tmpfs:
       - /tmp:rw,noexec,nosuid,size=64m
     read_only: true
@@ -37,3 +38,6 @@ services:
     mem_limit: 512m
     cpus: 1.0
     pids_limit: 128
+
+volumes:
+  frontend_dataprotection:

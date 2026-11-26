@@ -19,6 +19,9 @@ COPY --from=build /app/publish ./
 ENV ASPNETCORE_URLS=http://0.0.0.0:5000
 EXPOSE 5000
 
+RUN mkdir -p /home/app/.aspnet/DataProtection-Keys \
+    && chown -R "$APP_UID:$APP_UID" /home/app/.aspnet
+
 USER $APP_UID
 
 ENTRYPOINT ["dotnet", "FrontendNet.dll"]
