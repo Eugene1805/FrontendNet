@@ -1,7 +1,9 @@
 using System.Net;
 using System.Text.RegularExpressions;
+using FrontendNet.Middlewares;
 using FrontendNet.Tests.Support;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 
@@ -140,6 +142,53 @@ public partial class SecurityAndHeadersTests
             .Value;
         Assert.Equal("CF-Connecting-IP", cfOptions.ForwardedForHeaderName);
         Assert.Equal("X-Forwarded-Proto", cfOptions.ForwardedProtoHeaderName);
+    }
+
+    [Fact]
+    public async Task ForwardedHeaders_LoadsTrustedProxyCidrs_AndClientIpHandlerForwardsRemoteIp()
+    {
+        await using var defaultFactory = new FrontendWebApplicationFactory();
+        await using var proxyFactory = defaultFactory.WithWebHostBuilder(builder =>
+        {
+            builder.UseSetting("Security:TrustedProxyCidrs:0", "127.0.0.1/32");
+            builder.UseSetting("Security:TrustedProxyCidrs:1", "172.16.0.0/12");
+        });
+
+        var options = proxyFactory.Services
+            .GetRequiredService<IOptions<ForwardedHeadersOptions>>()
+            .Value;
+
+        Assert.Contains(options.KnownNetworks, n => n.Prefix.Equals(IPAddress.Loopback) && n.PrefixLength == 32);
+        Assert.Contains(options.KnownNetworks, n => n.Prefix.Equals(IPAddress.Parse("172.16.0.0")) && n.PrefixLength == 12);
+
+        var httpContext = new DefaultHttpContext();
+        httpContext.Connection.RemoteIpAddress = IPAddress.Parse("203.0.113.45");
+        var accessor = new HttpContextAccessor { HttpContext = httpContext };
+        var capture = new CaptureHeaderHandler();
+        var handler = new ClientIpForwardingDelegatingHandler(accessor) { InnerHandler = capture };
+        using var invoker = new HttpMessageInvoker(handler);
+
+        using var firstReq = new HttpRequestMessage(HttpMethod.Get, "https://api.tienda.lan/api/products");
+        await invoker.SendAsync(firstReq, CancellationToken.None);
+        Assert.Equal("203.0.113.45", Assert.Single(capture.LastForwardedFor));
+
+        using var presetReq = new HttpRequestMessage(HttpMethod.Get, "https://api.tienda.lan/api/products");
+        presetReq.Headers.TryAddWithoutValidation("X-Forwarded-For", "198.51.100.9");
+        await invoker.SendAsync(presetReq, CancellationToken.None);
+        Assert.Equal("198.51.100.9", Assert.Single(capture.LastForwardedFor));
+    }
+
+    private sealed class CaptureHeaderHandler : HttpMessageHandler
+    {
+        public string[] LastForwardedFor { get; private set; } = [];
+
+        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+        {
+            LastForwardedFor = request.Headers.TryGetValues("X-Forwarded-For", out var values)
+                ? values.ToArray()
+                : [];
+            return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK));
+        }
     }
 
     [GeneratedRegex(@"<script(?![^>]*\bsrc=)[^>]*>", RegexOptions.IgnoreCase)]
