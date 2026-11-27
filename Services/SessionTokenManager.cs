@@ -184,6 +184,16 @@ public sealed class SessionTokenManager : ISessionTokenManager
         await PersistClaimsAsync(httpContext, claims);
     }
 
+    public async Task UpdateSellerStatusAsync(HttpContext httpContext, string? sellerStatus)
+    {
+        if (httpContext.User?.Identity?.IsAuthenticated != true) return;
+
+        var claims = httpContext.User.Claims.Where(c => c.Type != SellerStatusClaimType).ToList();
+        if (!string.IsNullOrWhiteSpace(sellerStatus))
+            claims.Add(new Claim(SellerStatusClaimType, sellerStatus));
+        await PersistClaimsAsync(httpContext, claims);
+    }
+
     public void RemoveSession(ClaimsPrincipal? user)
     {
         var sessionId = user?.FindFirstValue(SessionIdClaimType);

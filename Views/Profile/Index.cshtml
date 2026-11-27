@@ -49,25 +49,6 @@
                 </div>
             </div>
         }
-        <div class="mb-3 ps-3">
-            <label class="form-label form-text">Tiempo restante del token de acceso</label>
-            <div class="form-text text-body">@(Model.RemainingTime ?? "No disponible")</div>
-        </div>
-        @if (Model.ExpiresUtc is { } expiresUtc)
-        {
-            <div class="mb-3 ps-3">
-                <label class="form-label form-text">El token de acceso expira</label>
-                <div class="form-text text-body">@DisplayFormatter.FormatLocalDateTime(expiresUtc)</div>
-            </div>
-        }
-        @if (Model.Issuer != null || Model.Audience != null)
-        {
-            <div class="mb-3 ps-3">
-                <label class="form-label form-text">Token emitido por / para</label>
-                <div class="form-text text-body">@Model.Issuer / @Model.Audience</div>
-            </div>
-        }
-        <p class="ps-3 form-text mb-0">Por seguridad, el token de sesión (JWT) no se muestra en pantalla.</p>
     </div>
 </div>
 

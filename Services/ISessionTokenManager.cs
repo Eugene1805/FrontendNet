@@ -25,6 +25,8 @@ public interface ISessionTokenManager
 
     Task UpdateUserNameAsync(HttpContext httpContext, string newName);
 
+    Task UpdateSellerStatusAsync(HttpContext httpContext, string? sellerStatus);
+
     void RemoveSession(ClaimsPrincipal? user);
 
     void RemoveSession(string? sessionId);

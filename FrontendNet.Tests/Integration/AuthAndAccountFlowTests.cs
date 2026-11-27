@@ -195,8 +195,10 @@ public class AuthAndAccountFlowTests
         Assert.Equal(HttpStatusCode.OK, profileResp.StatusCode);
         var profileHtml = FrontendWebApplicationFactory.DecodeHtml(await profileResp.Content.ReadAsStringAsync());
         Assert.Contains("Comprador Demo", profileHtml);
-        Assert.Contains("00:04:59", profileHtml);
         Assert.Contains("Comprador", profileHtml);
+        Assert.DoesNotContain("Tiempo restante del token", profileHtml);
+        Assert.DoesNotContain("El token de acceso expira", profileHtml);
+        Assert.DoesNotContain("Token emitido por", profileHtml);
         Assert.DoesNotContain("eyJ", profileHtml);
 
         var editResp = await factory.PostFormWithAntiforgeryAsync(

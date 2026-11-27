@@ -22,7 +22,7 @@ public class OrdersController(
 
     public async Task<IActionResult> Index(string? status, int page = 1)
     {
-        if (IsUnapprovedSeller())
+        if (await IsUnapprovedSellerAsync())
             return View("~/Views/Products/SellerPending.cshtml");
 
         try
@@ -40,7 +40,7 @@ public class OrdersController(
 
     public async Task<IActionResult> Details(string id)
     {
-        if (IsUnapprovedSeller())
+        if (await IsUnapprovedSellerAsync())
             return View("~/Views/Products/SellerPending.cshtml");
 
         try
@@ -166,7 +166,7 @@ public class OrdersController(
     [Authorize(Roles = $"{Roles.Seller},{Roles.Admin}")]
     public async Task<IActionResult> UpdateStatusAsync(string id, string status, string? reason = null)
     {
-        if (IsUnapprovedSeller())
+        if (await IsUnapprovedSellerAsync())
             return View("~/Views/Products/SellerPending.cshtml");
 
         var normalizedStatus = status?.Trim().ToUpperInvariant() ?? string.Empty;

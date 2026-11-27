@@ -15,7 +15,7 @@ public class ProductsController(
 {
     public async Task<IActionResult> Index(string? s, int page = 1)
     {
-        if (IsUnapprovedSeller())
+        if (await IsUnapprovedSellerAsync())
             return View("SellerPending");
 
         var search = s?.Trim();
@@ -48,7 +48,7 @@ public class ProductsController(
 
     public async Task<IActionResult> Details(int id)
     {
-        if (IsUnapprovedSeller())
+        if (await IsUnapprovedSellerAsync())
             return View("SellerPending");
 
         try
@@ -68,7 +68,7 @@ public class ProductsController(
     [Authorize(Roles = Roles.Seller)]
     public async Task<IActionResult> Create()
     {
-        if (IsUnapprovedSeller())
+        if (await IsUnapprovedSellerAsync())
             return View("SellerPending");
 
         await PopulateCategoriesDropDownAsync();
@@ -79,7 +79,7 @@ public class ProductsController(
     [Authorize(Roles = Roles.Seller)]
     public async Task<IActionResult> CreateAsync(ProductFormModel model)
     {
-        if (IsUnapprovedSeller())
+        if (await IsUnapprovedSellerAsync())
             return View("SellerPending");
 
         NormalizeNumericOverflowErrors();
@@ -131,7 +131,7 @@ public class ProductsController(
     [Authorize(Roles = Roles.Seller)]
     public async Task<IActionResult> Edit(int id)
     {
-        if (IsUnapprovedSeller())
+        if (await IsUnapprovedSellerAsync())
             return View("SellerPending");
 
         try
@@ -152,7 +152,7 @@ public class ProductsController(
     [Authorize(Roles = Roles.Seller)]
     public async Task<IActionResult> EditAsync(int id, ProductFormModel model)
     {
-        if (IsUnapprovedSeller())
+        if (await IsUnapprovedSellerAsync())
             return View("SellerPending");
 
         if (id != model.ProductId) return NotFound();
@@ -224,7 +224,7 @@ public class ProductsController(
     [Authorize(Roles = Roles.Seller)]
     public async Task<IActionResult> UploadImageAsync(int id, IFormFile? image)
     {
-        if (IsUnapprovedSeller())
+        if (await IsUnapprovedSellerAsync())
             return View("SellerPending");
 
         var validationError = ImageUploadValidator.Validate(image, configuration);
@@ -253,7 +253,7 @@ public class ProductsController(
     [Authorize(Roles = Roles.Seller)]
     public async Task<IActionResult> DeleteImageAsync(int id)
     {
-        if (IsUnapprovedSeller())
+        if (await IsUnapprovedSellerAsync())
             return View("SellerPending");
 
         try
@@ -274,7 +274,7 @@ public class ProductsController(
     [Authorize(Roles = Roles.Seller)]
     public async Task<IActionResult> Delete(int id, string? error = null)
     {
-        if (IsUnapprovedSeller())
+        if (await IsUnapprovedSellerAsync())
             return View("SellerPending");
 
         try
@@ -297,7 +297,7 @@ public class ProductsController(
     [Authorize(Roles = Roles.Seller)]
     public async Task<IActionResult> DeleteConfirmedAsync(int id)
     {
-        if (IsUnapprovedSeller())
+        if (await IsUnapprovedSellerAsync())
             return View("SellerPending");
 
         try
@@ -317,7 +317,7 @@ public class ProductsController(
     [Authorize(Roles = Roles.Seller)]
     public async Task<IActionResult> Categories(int id)
     {
-        if (IsUnapprovedSeller())
+        if (await IsUnapprovedSellerAsync())
             return View("SellerPending");
 
         try
@@ -338,7 +338,7 @@ public class ProductsController(
     [Authorize(Roles = Roles.Seller)]
     public async Task<IActionResult> AddCategory(int id)
     {
-        if (IsUnapprovedSeller())
+        if (await IsUnapprovedSellerAsync())
             return View("SellerPending");
 
         try
@@ -360,7 +360,7 @@ public class ProductsController(
     [Authorize(Roles = Roles.Seller)]
     public async Task<IActionResult> AddCategoryAsync(int id, int? categoryId)
     {
-        if (IsUnapprovedSeller())
+        if (await IsUnapprovedSellerAsync())
             return View("SellerPending");
 
         Product? product = null;
@@ -397,7 +397,7 @@ public class ProductsController(
     [Authorize(Roles = Roles.Seller)]
     public async Task<IActionResult> RemoveCategory(int id, int categoryId, string? error = null)
     {
-        if (IsUnapprovedSeller())
+        if (await IsUnapprovedSellerAsync())
             return View("SellerPending");
 
         try
@@ -428,7 +428,7 @@ public class ProductsController(
     [Authorize(Roles = Roles.Seller)]
     public async Task<IActionResult> RemoveCategoryConfirmedAsync(int id, int categoryId)
     {
-        if (IsUnapprovedSeller())
+        if (await IsUnapprovedSellerAsync())
             return View("SellerPending");
 
         try

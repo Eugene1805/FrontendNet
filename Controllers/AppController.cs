@@ -31,6 +31,39 @@ public abstract class AppController : Controller
             SellerStatuses.Approved,
             StringComparison.OrdinalIgnoreCase);
 
+    /// <summary>
+    /// Checks whether the current seller is unapproved, refreshing SellerStatus from GET /api/users/me
+    /// when the local cookie claim is not yet APPROVED so in-session admin approvals take effect immediately.
+    /// </summary>
+    protected async Task<bool> IsUnapprovedSellerAsync()
+    {
+        if (!IsUnapprovedSeller())
+            return false;
+
+        var profile = HttpContext.RequestServices.GetService<ProfileClientService>();
+        if (profile is null)
+            return true;
+
+        try
+        {
+            var me = await profile.GetMeAsync();
+            if (!string.IsNullOrWhiteSpace(me?.SellerStatus))
+            {
+                var tokenManager = HttpContext.RequestServices.GetService<ISessionTokenManager>();
+                if (tokenManager is not null)
+                    await tokenManager.UpdateSellerStatusAsync(HttpContext, me.SellerStatus);
+
+                return !string.Equals(me.SellerStatus, SellerStatuses.Approved, StringComparison.OrdinalIgnoreCase);
+            }
+        }
+        catch (Exception ex) when (IsApiError(ex))
+        {
+            // Preserve safe denial if the backend is unreachable or returns an error.
+        }
+
+        return true;
+    }
+
     protected async Task<IActionResult> HandleUnauthorizedAsync()
     {
         var tokenManager = HttpContext.RequestServices.GetService<ISessionTokenManager>();

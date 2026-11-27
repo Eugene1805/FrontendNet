@@ -26,7 +26,15 @@ public class ProfileController(
             return await HandleGetErrorAsync(ex);
         }
 
-        var jwtInfo = JwtInfo.Read(tokenManager.GetCurrentAccessToken(User));
+        if (!string.IsNullOrWhiteSpace(me?.SellerStatus) &&
+            !string.Equals(
+                me.SellerStatus,
+                User.FindFirstValue(SessionTokenManager.SellerStatusClaimType),
+                StringComparison.OrdinalIgnoreCase))
+        {
+            await tokenManager.UpdateSellerStatusAsync(HttpContext, me.SellerStatus);
+        }
+
         var viewModel = new ProfileSessionViewModel
         {
             Id = me?.Id ?? GetCurrentUserId() ?? string.Empty,
@@ -36,21 +44,8 @@ public class ProfileController(
             Status = me?.Status ?? UserStatuses.Active,
             PhoneNumber = me?.PhoneNumber,
             StoreName = me?.StoreName,
-            SellerStatus = me?.SellerStatus ?? User.FindFirstValue(SessionTokenManager.SellerStatusClaimType),
-            ExpiresUtc = jwtInfo?.ExpiresUtc,
-            Issuer = jwtInfo?.Issuer,
-            Audience = jwtInfo?.Audience
+            SellerStatus = me?.SellerStatus ?? User.FindFirstValue(SessionTokenManager.SellerStatusClaimType)
         };
-
-        try
-        {
-            viewModel.RemainingTime = await profile.GetRemainingTimeAsync();
-        }
-        catch (Exception ex) when (IsApiError(ex))
-        {
-            if (GetStatusCode(ex) == HttpStatusCode.Unauthorized)
-                return await HandleUnauthorizedAsync();
-        }
 
         return View("Index", viewModel);
     }

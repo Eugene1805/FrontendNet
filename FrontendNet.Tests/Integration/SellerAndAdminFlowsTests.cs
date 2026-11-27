@@ -23,6 +23,14 @@ public class SellerAndAdminFlowsTests
         var ordersHtml = FrontendWebApplicationFactory.DecodeHtml(
             await (await client.GetAsync("/Orders")).Content.ReadAsStringAsync());
         Assert.Contains("Cuenta de vendedor en revisión", ordersHtml);
+
+        // Once approved by an admin, the same session immediately reflects approval without re-login
+        factory.Backend.UsersByEmail["pending-seller@uv.mx"].SellerStatus = SellerStatuses.Approved;
+        var createResp = await client.GetAsync("/Products/Create");
+        Assert.Equal(HttpStatusCode.OK, createResp.StatusCode);
+        var createHtml = FrontendWebApplicationFactory.DecodeHtml(await createResp.Content.ReadAsStringAsync());
+        Assert.DoesNotContain("Cuenta de vendedor en revisión", createHtml);
+        Assert.Contains("Guardar", createHtml);
     }
 
     [Fact]
